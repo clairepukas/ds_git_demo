@@ -24,6 +24,7 @@ BEGIN
 		
 			BEGIN TRY
 				SET NOCOUNT ON
+				SET NOCOUNT ON --Test for git 
 
 				SELECT  @process_id = process_ID 
 				FROM app_processes

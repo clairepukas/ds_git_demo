@@ -21,6 +21,8 @@ BEGIN
 		@atf_date_2			DATETIME;   
 	
 		BEGIN TRANSACTION
+		--claire's git test #1
+		
 		
 			BEGIN TRY
 				SET NOCOUNT ON

@@ -1,0 +1,25 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title</title>
+    <link href="~/Content/Site.css" rel="stylesheet" type="text/css" />
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <script src="~/Scripts/modernizr-2.6.2.js"></script>
+</head>
+<body bgcolor="white" style="background-color:white">
+    <div class="">
+        @RenderBody()
+        <footer style="max-height:40px">
+            <div class="content-wrapper">
+                <div style="font-size:x-small">
+                    <p>&copy; @DateTime.Now.Year - Georgia System Operations Corp</p>
+                    <p>This application is best viewed with Chrome or Internet Explorer version 9.0 or higher.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,515 @@
+﻿@model Probe.Models.ProjectInfo
+
+
+@{
+    try
+    {
+        //Get selected proj
+        var db = WebMatrix.Data.Database.Open("probedb");
+
+        //Get updates
+        var updatelist = db.Query(@"Select ProjectUpdateId
+                                        ,Explanation
+                                        ,b.DisplayName as UpdateOwner
+                                        ,b.UserId as UpdateOwnerId
+                                        ,a.createDt
+                                    FROM ProjectUpdates  a
+	                                join Users b
+	                                on a.UpdateOwner = b.UserId
+                                    WHERE ProjectId = @0
+                                    ORDER BY createDt desc", Model.ProjectId);
+
+        //Get Project Issues
+        var issueList = db.Query(@"SELECT ProjectIssueId
+		                                ,Explanation
+		                                ,Resolution
+		                                ,b.DisplayName as IssueOwner
+                                        ,b.UserName as IssueOwnerUserName
+		                                ,IssueStatus
+		                                ,TargetDate
+		                                ,a.createDt
+	                                FROM ProjectIssues a
+	                                join Users b
+	                                on a.IssueOwner = b.UserId
+                                    WHERE ProjectId = @0
+	                                ORDER BY createDt desc", Model.ProjectId);
+
+        //Get Phase Info
+        var phase = db.QueryValue(@"SELECT b.PhaseName
+                              FROM ProjectPhases a
+                              join Phases b
+                              on a.PhaseId = b.PhaseId
+                              where ProjectId = @0
+                              and pct_complete < 100
+                              and IsCurrent = 1", Model.ProjectId);
+
+        //Get Contributors
+        var contributors = db.Query(@"Select b.DisplayName,
+	                                           b.UserName,
+                                               b.UserId,
+	                                           a.createDt
+                                        FROM  ProjectUserRoles a
+                                        join Users b
+                                        on a.UserId = b.UserId
+                                        where ProjectId = @0
+                                        and ProjectRole = 'Contributor'", Model.ProjectId);
+
+        <script src="~/Scripts/ProbeScripts/ProjectInfo.js?rfrsh=true"></script>
+
+        <div style="background-color:beige; width:100%;">
+            <span style="font-size: 11pt;font-weight:500;">Project Information</span>
+        </div>
+        using (Html.BeginForm("UpdateProjectInfo", "Home", FormMethod.Post, new { id = "projectInfoForm" }))
+        {
+            <table class="projInfoTable">
+                <tr>
+                    <td colspan="2">
+                        @Html.HiddenFor(model => model.ProjectId)
+                        @Html.LabelFor(model => model.DisplayName)
+                        @Html.TextBoxFor(model => model.DisplayName, ViewBag.DisplayNameDisabled ? (object)new { disabled = "disabled", style = "width:80%" } : new { style = "width: 80%;maxlength:355;", onChange = "fieldChanged(DisplayName);" })
+                        @{Html.ValidateFor(model => model.DisplayName);}
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ProjectNumber)
+                        @Html.TextBoxFor(model => model.ProjectNumber, new { disabled = "disabled", style = "width: 150px;border:0;" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.BudgetNum)
+                        @Html.TextBoxFor(model => model.BudgetNum, ViewBag.BudgetNumDisabled ? (object)new { disabled = "disabled", style = "width:150px" } : new { id="BudgetNumber", style = "width: 150px;", onChange = "fieldChanged(BudgetNum);" })
+                        @{Html.ValidateFor(model => model.BudgetNum);}
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ProjectType)
+                        @Html.DropDownListFor(model => model.ProjectType, Model.BudgetTypeList, ViewBag.ProjectTypeDisabled ? (object)new { disabled = "disabled", style = "width:150px" } : new { style = "width: 150px;", onChange = "fieldChanged(ProjectType);" })
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        @Html.LabelFor(model => model.Manager,"Project Manager")
+                        @Html.DropDownListFor(model => model.Manager, Model.ManagerList, ViewBag.ManagerDisabled ? (object)new { disabled = "disabled" } : new {id="Manager", style = "width: 150px;", onChange = "fieldChanged(Manager);" })
+                        @{Html.ValidateFor(model => model.Manager);}
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.Sponsor)
+                        @Html.DropDownListFor(model => model.Sponsor, Model.SponsorList, ViewBag.SponsorDisabled ? (object)new { disabled = "disabled" } : new {id="Sponsor", style = "width: 150px;", onChange = "fieldChanged(Sponsor);" })
+                        @{Html.ValidateFor(model => model.Sponsor);}
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.Engineer)
+                        @Html.DropDownListFor(model => model.Engineer, Model.EngineerList, ViewBag.EngineerDisabled ? (object)new { disabled = "disabled" } : new { id = "Engineer", style = "width: 150px;", onChange = "fieldChanged(Engineer);" })
+                        @{Html.ValidateFor(model => model.Engineer);}
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.Creator)
+                        @Html.TextBoxFor(model => model.Creator, new { disabled = "disabled", style = "width: 150px;border:0;" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ApprovalStatus)
+                        @Html.TextBoxFor(model => model.ApprovalStatus, new { disabled = "disabled", style = "width: 150px;border:0;" })
+                    </td>
+
+                </tr>
+                <tr>
+                    <td colspan="5">
+                        @Html.LabelFor(model => model.Scope)
+                        @Html.TextAreaFor(model => model.Scope, ViewBag.ScopeDisabled ? (object)new { disabled = "disabled" } : new { id="Scope", rows = 4, style = "width: 1250px;", onChange = "fieldChanged(Scope);" })
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        @Html.LabelFor(model => model.ProposedStart)
+                        @Html.TextBoxFor(model => model.ProposedStart, "{0:MM/dd/yyyy}", new { id = "ProposedStart", disabled = "disabled", style = "width: 150px;" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ProposedEnd)
+                        @Html.TextBoxFor(model => model.ProposedEnd, "{0:MM/dd/yyyy}", new { id = "ProposedEnd", disabled = "disabled", style = "width: 150px;" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ActivityStatus)
+                        @Html.DropDownListFor(model => model.ActivityStatus, Model.ActivityStatusList, ViewBag.ActivityStatusDisabled ? (object)new { disabled = "disabled" } : new { style = "width: 150px;", onChange = "activityStatusChanged(ActivityStatus);" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.spank.BudgetedTotal)
+                        @Html.TextBoxFor(model => model.spank.BudgetedTotal, "{0:C}", new { disabled = "disabled", style = "width: 150px; border:0;" })
+                    </td>
+                    <td>
+                        <label>Current Phased</label>
+                        <input type="text" disabled="disabled" value="@phase" style="width: 150px; border:0;" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        @Html.LabelFor(model => model.ProjectedStart)
+                        @Html.TextBoxFor(model => model.ProjectedStart, "{0:MM/dd/yyyy}", ViewBag.ProjectedStartDisabled ? (object)new { disabled = "disabled", style = "width:150px" } : new { id = "ProjectedStart", style = "width: 150px;", onChange = "dateFieldChanged(ProjectedStart);" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ProjectedEnd)
+                        @Html.TextBoxFor(model => model.ProjectedEnd, "{0:MM/dd/yyyy}", ViewBag.ProjectedEndDisabled ? (object)new { disabled = "disabled", style = "width:150px" } : new { id = "ProjectedEnd", style = "width: 150px;", onChange = "dateFieldChanged(ProjectedEnd);" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.Priority)
+                        @Html.CheckBoxFor(model => model.Priority, ViewBag.PriorityDisabled ? (object)new { disabled = "disabled" } : new { id = "Priority" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ProjectBudgets.ProjectedTotal)
+                        @Html.TextBoxFor(model => model.ProjectBudgets.ProjectedTotal, "{0:C}", new { disabled = "disabled", style = "width: 150px; border:0;" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.pct_complete)
+                        @Html.TextBoxFor(model => model.pct_complete, new { disabled = "disabled", style = "width: 150px; border:0;" })
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        @Html.LabelFor(model => model.ActualStart)
+                        @Html.TextBoxFor(model => model.ActualStart, "{0:MM/dd/yyyy}", ViewBag.ActualStartDisabled ? (object)new {id="ActualStart", disabled = "disabled", style = "width:150px" } : new { style = "width: 150px;", onChange = "dateFieldChanged(ActualStart);" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ActualEnd)
+                        @Html.TextBoxFor(model => model.ActualEnd, "{0:MM/dd/yyyy}", ViewBag.ActualEndDisabled ? (object)new { id = "ActualEnd", disabled = "disabled", style = "width:150px" } : new { style = "width: 150px;", onChange = "dateFieldChanged(ActualEnd);" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.Customer)
+                        @Html.DropDownListFor(model => model.Customer, Model.CustomerList, ViewBag.CustomerDisabled ? (object)new { id = "Customer", disabled = "disabled", style = "width:150px" } : new { style = "width: 150px;", onChange = "fieldChanged(Customer);" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ProjectBudgets.ActualTotal)
+                        @Html.TextBoxFor(model => model.ProjectBudgets.ActualTotal, "{0:C}", new { disabled = "disabled", style = "width: 150px; border:0;" })
+                    </td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="5">
+                        @Html.LabelFor(model => model.Comments)
+                        @Html.TextAreaFor(model => model.Comments, ViewBag.CommentsDisabled ? (object)new { id = "Comments", disabled = "disabled", style = "width:1250px" } : new { rows = 4, style = "width: 1250px;", onChange = "fieldChanged(Comments);" })
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="5">
+                        @Html.LabelFor(model => model.ProjectGroup)
+                        @Html.DropDownListFor(model => model.ProjectGroup.GroupId, Model.GroupList, ViewBag.GroupsDisabled ? (object)new { id = "ProjectGroup", disabled = "disabled", style = "width:1250px" } : new { id = "ProjectGroup", style = "width: 1250px;", onChange = "fieldChanged(ProjectGroup);" })
+                    </td>
+                </tr>
+            </table><br />
+        }
+
+    <div id="dialog-message"></div>
+
+    @* Updates Section *@
+    <div class="ui-corner-all table-div-100">
+
+        <table>
+            <tr>
+                <td><label class="label">Updates</label>&nbsp;<img id="addUpdateBtn" src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="AddUpdate('@ViewBag.UserDisplayName');" /></td>
+            </tr>
+            <tr>
+                @*<td style="vertical-align:text-top;"><table><tr><td style="text-align:center;"><label class="label">Updates</label></td></tr><tr><td style="text-align:center;"><img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="AddUpdate('@ViewBag.UserDisplayName');" /></td></tr></table></td>*@
+                <td style="width:auto;">
+                    <div class="ui-corner-all" style="max-height:150px;width:auto;overflow-y:auto;overflow-x:hidden;">
+                        <table class="projInfoUpdateTable">
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th>Date Created</th>
+                                <th>Explanation</th>
+                                <th>Owner</th>
+                            </tr>
+                            @{
+                                if (updatelist.Count() > 0)
+                                {
+                                    foreach (var updt in updatelist)
+                                    {
+                                        string x = updt.Explanation.Replace("\"", "&quot;"); 
+                                        
+                                        <tr>
+                                            <td><img src='~/Images/delete.png' alt='Delete' class='btnDelete' style="cursor:pointer;" onclick="DeleteUpdate('@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(updt.ProjectUpdateId)))');" /></td>
+                                            <td><img src='~/Images/pencil.png' alt='Edit' class='btnEdit' style="cursor:pointer;" onclick="EditUpdate('@Html.Raw(HttpUtility.JavaScriptStringEncode(x))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(updt.UpdateOwner))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(updt.UpdateOwnerId)))','@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(updt.ProjectUpdateId)))');" /></td>
+                                            <td><img src='~/Images/zoom.png' alt='View' class='btnView' style="cursor:pointer;" onclick="ViewUpdate('@Html.Raw(HttpUtility.JavaScriptStringEncode(x))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(updt.UpdateOwner))');" /></td>
+                                            <td><div class="updates" style="width:130px;" id="updateCreateDt">@updt.createDt</div></td>
+                                            <td><div class="updates" style="width:620px;">@updt.Explanation</div></td>
+                                            <td><div class="updates" style="width:110px;" id="updateOwner">@updt.UpdateOwner</div></td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td><img src='~/Images/delete.png' alt='Delete' class='btnDelete' /></td>
+                                        <td><img src='~/Images/pencil.png' alt='Edit' class='btnEdit' /></td>
+                                        <td><img src='~/Images/zoom.png' alt='View' class='btnView' /></td>
+                                        <td><div class="updates" style="width:130px;" id="updateCreateDt"></div></td>
+                                        <td><div class="updates" style="width:620px;"></div></td>
+                                        <td><div class="updates" style="width:115px;" id="updateOwner"></div></td>
+                                    </tr>
+                                }
+                            }
+                        </table>
+                    </div>
+                </td>
+            </tr>
+
+
+        </table>
+
+
+    </div>
+    @* End Updates Section *@
+
+    @* Issues Section *@
+    <div class="ui-corner-all table-div-100">
+
+        <table>
+            <tr>
+                <td><label class="label">Issues</label>&nbsp;<img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="AddIssue();" /></td>
+            </tr>
+            <tr>
+                @*<td style="vertical-align:text-top;"><table><tr><td style="text-align:center;"><label class="label">Issues</label></td></tr><tr><td style="text-align:center;"><img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="AddIssue();" /></td></tr></table></td>*@
+
+                <td>
+                    <div class="ui-corner-all" style="max-height:150px;width:auto;overflow-y:auto;overflow-x:hidden;">
+                        <table class="projInfoUpdateTable">
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th>Date Created</th>
+                                <th>Explanation</th>
+                                <th>Owner</th>
+                                <th>Status</th>
+                            </tr>
+                            @{
+                                if (issueList.Count() > 0)
+                                {
+                                    foreach (var iss in issueList)
+                                    {
+                                        string exp = iss.Explanation.Replace("\"", "&quot;");
+                                        string res = iss.Resolution.Replace("\"", "&quot;");
+                                        <tr>
+                                            <td><img src='~/Images/delete.png' alt='Delete' class='btnDelete' style="cursor:pointer;" onclick="DeleteIssue('@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(iss.ProjectIssueId)))')" /></td>
+                                            <td><img src='~/Images/pencil.png' alt='Edit' class='btnEdit' style="cursor:pointer;" onclick="EditIssue('@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(iss.ProjectIssueId)))','@Html.Raw(HttpUtility.JavaScriptStringEncode(exp))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(iss.IssueOwner))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(iss.IssueOwnerUserName))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(iss.IssueStatus))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(iss.TargetDate)))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(res))');" /></td>
+                                            <td><img src='~/Images/zoom.png' alt='View' class='btnView' style="cursor:pointer;" onclick="ViewIssue('@Html.Raw(HttpUtility.JavaScriptStringEncode(exp))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(iss.IssueOwner))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(iss.IssueStatus))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(iss.TargetDate)))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(res))');" /></td>
+                                            <td><div class="updates" style="width:130px;" id="issueCreateDt">@iss.createDt</div></td>
+                                            <td><div class="updates" style="width:520px;">@iss.Explanation</div></td>
+                                            <td><div class="updates" style="width:110px;" id="issueOwner">@iss.IssueOwner</div></td>
+                                            <td><div class="updates" style="width:75px;" id="issueStatus">@iss.IssueStatus</div></td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td><img src='~/Images/delete.png' alt='Delete' class='btnDelete' /></td>
+                                        <td><img src='~/Images/pencil.png' alt='Edit' class='btnEdit' /></td>
+                                        <td><img src='~/Images/zoom.png' alt='View' class='btnView' /></td>
+                                        <td><div class="updates" style="width:130px;" id="issueCreateDt"></div></td>
+                                        <td><div class="updates" style="width:520px;"></div></td>
+                                        <td><div class="updates" style="width:115px;" id="issueOwner"></div></td>
+                                        <td><div class="updates" style="width:75px;" id="issueStatus"></div></td>
+                                    </tr>
+                                }
+                            }
+                        </table>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+
+    </div>
+    @* End Issues Section *@
+
+    @* Attachments Section *@
+    <div class="ui-corner-all table-div-100">
+
+        <table>
+            <tr>
+                <td><label class="label">Attachments</label>&nbsp;<img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="toggleUploadDiv();" /></td>
+
+            </tr>
+            <tr>
+                @*<td style="vertical-align:text-top;"><table><tr><td style="text-align:center;"><label class="label">Attachments</label></td></tr><tr><td style="text-align:center;"><img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="toggleUploadDiv();" /></td></tr></table></td>*@
+
+                <td>
+                    <div class="ui-corner-all" style="max-height:150px;width:auto;overflow-y:auto;overflow-x:hidden;">
+                        <div id="uploadDiv" style="display:none;">
+                            @using (@Html.BeginForm("addAttachment", "Home", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                            {
+                                <fieldset>
+                                    <input type="hidden" name="projectId" id="projectId" value="@Model.ProjectId" />
+                                    <input type="file" name="uploadFile" id="uploadFile" />
+                                    <input type="submit" name="uploadBtn" value="Upload" id="uploadBtn" />
+                                </fieldset>
+                            }
+                        </div>
+                        <table class="projInfoUpdateTable">
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th>Date Created</th>
+                                <th>Title</th>
+                                <th>File Type</th>
+                            </tr>
+                            @{
+                                if (Model.ProjectAttachments.Count() > 0)
+                                {
+                                    foreach (var doc in Model.ProjectAttachments)
+                                    {
+                                        <tr>
+                                            <td><img src='~/Images/delete.png' alt='Delete' class='btnDelete' style="cursor:pointer;" onclick="DeleteAttachment('@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(doc.ProjectAttachmentId)))')" /></td>
+                                            <td>@Html.ActionLink("View", "viewAttachment", "Home", new { attachmentId = doc.ProjectAttachmentId }, new { @class = "imageButton" })</td>
+                                            @*<td><img src='~/Images/zoom.png' alt='View' class='btnView' style="cursor:pointer;" onclick="ViewAttachment('@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(doc.ProjectAttachmentId)))');" /></td>*@
+                                            <td><div class="updates" style="width:110px;" id="attachmentCreateDate">@doc.createdDt</div></td>
+                                            <td><div class="updates" style="width:620px;" id="attachmentTitle">@doc.AttachmentTitle</div></td>
+                                            <td><div class="updates" style="width:100px;">@doc.FileType</div></td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td><img src='~/Images/delete.png' alt='Delete' class='btnDelete' /></td>
+                                        <td><img src='~/Images/zoom.png' alt='View' class='btnView' /></td>
+                                        <td><div class="updates" style="width:110px;" id="attachmentCreateDate"></div></td>
+                                        <td><div class="updates" style="width:620px;" id="attachmentTitle"></div></td>
+                                        <td><div class="updates" style="width:100px;"></div></td>
+                                    </tr>
+                                }
+                            }
+                        </table>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+    @* End Attachments Section*@
+
+    @*Contributors Section*@
+    <div id="contributors" class="ui-corner-all table-div-100">
+
+        <table>
+            <tr>
+                <td style="vertical-align:central;"><label class="label">Contributors</label>&nbsp;<img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="AddContributor();" /></td>
+
+            </tr>
+            <tr>
+                @*<td style="vertical-align:text-top;"><table><tr><td style="text-align:center;"><label class="label">Contributors</label></td></tr><tr><td style="text-align:center;"><img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="AddContributor();" /></td></tr></table></td>*@
+                <td style="width:auto;">
+                    <div class="ui-corner-all" style="max-height:150px;width:400px;overflow-y:auto;overflow-x:hidden;">
+                        <table class="projInfoUpdateTable">
+                            <tr>
+                                <th id="delePngHeader"></th>
+                                <th>Date Created</th>
+                                <th>Contributor</th>
+                            </tr>
+                            @{
+        if (contributors.Count() > 0)
+        {
+            foreach (var x in contributors)
+            {
+                <tr>
+                    <td id="delePng"><img src='~/Images/delete.png' alt='Delete' class='btnDelete' style="cursor:pointer;" onclick="DeleteContributor('@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(x.UserId)))');" /></td>
+                    <td><div class="updates" style="width:130px;" id="CreateDt">@x.createDt</div></td>
+                    <td><div class="updates" style="width:180px;">@x.DisplayName</div></td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td id="delePng"><img src='~/Images/delete.png' alt='Delete' class='btnDelete' /></td>
+                <td><div class="updates" style="width:130px;" id="CreateDt"></div></td>
+                <td><div class="updates" style="width:180px;"></div></td>
+            </tr>
+        }
+                            }
+                        </table>
+
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+    @*End Contributors Section*@
+
+   <script>
+
+    $(function () {
+
+        projId = @Model.ProjectId;
+        projName = '@Model.ProjectName';
+
+        UpdProjInfoUrl = '@Url.Action("UpdateProjectInfo","Home")';
+        ReconcileDatesUrl = '@Url.Action("ReconcileProjectDates", "Home")';
+        addUpdateUrl = '@Url.Action("addUpdate", "Home")';
+        changeUpdateUrl = '@Url.Action("changeUpdate", "Home")';
+        deleteUpdateUrl ='@Url.Action("deleteUpdate", "Home")';
+        addIssueUrl = '@Url.Action("addIssue", "Home")';
+        changeIssueUrl = '@Url.Action("changeIssue", "Home")';
+        deleteIssueUrl = '@Url.Action("deleteIssue", "Home")';
+        deleteAttachUrl = '@Url.Action("deleteAttachment", "Home")';
+        addContribUrl = '@Url.Action("addContributor", "Home")';
+        deleteContribUrl = '@Url.Action("deleteContributor", "Home")';
+        
+        mgrList = @Html.Raw(Json.Encode(Model.ManagerList));
+        contribList = @Html.Raw(Json.Encode(Model.ContributorList));
+        userName = '@ViewBag.UserName';
+
+        if(@ViewBag.CrudDisabled == true)
+        {
+            if(@ViewBag.HideContributors == true){
+                //$("#contributors").hide();
+                $("#delePng").empty();
+               
+            }
+            $(".btnAdd").hide();
+            $(".btnEdit").prop('disabled', true);
+            $(".btnDelete").prop('disabled', true);
+        }
+
+        var end = $("#ActualEnd").val();
+
+        if(end == "")
+        {
+            end = "+10y";
+        }
+
+        var start = $("#ActualStart").val();
+
+        if(start == "")
+        {
+            start = "-3y";
+        }
+
+        $("#ActualStart").datepicker({
+            defaultDate: "+1w",
+            changeMonth: true,
+            numberOfMonths: 3,
+            maxDate: end,
+            onClose: function (selectedDate) {
+                $("#ActualEnd").datepicker("option", "minDate", selectedDate);
+            }
+        });
+        $("#ActualEnd").datepicker({
+            defaultDate: "+1w",
+            changeMonth: true,
+            numberOfMonths: 3,
+            minDate: start,
+            maxDate: "+0d",
+            onClose: function (selectedDate) {
+                $("#ActualStart").datepicker("option", "maxDate", selectedDate);
+            }
+        });
+
+
+    });
+   </script>
+
+    }
+    catch (Exception ex)
+    {
+        <h3>@ex.Message</h3>
+    }
+}

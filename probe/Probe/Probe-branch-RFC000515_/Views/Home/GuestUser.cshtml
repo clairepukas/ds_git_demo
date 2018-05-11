@@ -1,0 +1,125 @@
+﻿@model Probe.Models.GuestUser
+
+@{
+    ViewBag.Title = "Guest User Registration";
+
+    <link href="~/Content/themes/overcast/jquery-ui.css" rel="stylesheet" />
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>@Page.Title</title>
+    <link href="~/Content/themes/base/all.css?rfrsh=true" rel="stylesheet" type="text/css" />
+
+    <link href="~/Content/Probe.css?rfrsh=true" rel="stylesheet" type="text/css">
+    <link href="~/Content/Site.css?rfrsh=true" rel="stylesheet" type="text/css" />
+    <link href="~/favicon.ico?rfrsh=true" rel="shortcut icon" type="image/x-icon" />
+    <script src="~/Scripts/jquery-2.1.3.js"></script>
+    <script src="~/Scripts/jquery-ui-1.11.2.js"></script>
+    <script src="~/Scripts/jquery.columnizer.js"></script>
+
+    <script src="~/Scripts/jquery.formatCurrency-1.4.0.min.js"></script>
+
+    <script src="~/Scripts/modernizr-2.6.2.js"></script>
+    <script src="~/Scripts/ProbeScripts/probe.js?rfrsh=true"></script>
+    <script type="text/javascript" src="~/Scripts/canvasjs-1.5.0/canvasjs.min.js"></script>
+    <meta name="viewport" content="width=device-width" />
+
+    <style>
+        .regFormDiv{
+            width:500px;
+            margin:auto auto;
+        }
+        .regFormDiv input{
+            width:300px;
+            padding:2px;
+        }
+         .regFormDiv td[colspan='2']{
+            text-align:center;
+        }
+         .lbl{
+             font-weight:bold;
+         }
+         .frmWrap{
+             padding:200px;
+         }
+    </style>
+
+</head>
+<body style="overflow-y:scroll">
+    <header>
+        <div class="content-wrapper">
+            <div class="float-left">
+                <p class="site-title"><a href="~/"><img src="~/Images/PROBE Header Slim.png" width="1300" alt="PROBE Logo" /></a></p>
+            </div>
+        </div>
+    </header>
+    <div class="frmWrap">
+        <h2>Your session may have ended or you are not found in the PROBE Users database.</h2>
+        <h2>If you are a Probe User you may click the top banner to refresh your session else you may register as a User by filling the form below. </h2>
+
+        <div class="regFormDiv">
+            <h4>Guest User Registration</h4>
+            <h6>To gain access to the P.R.O.B.E. application please fill out the form below.</h6>
+            <p>All fields are required.</p>
+
+            @using (Html.BeginForm("GuestUser","Home"))
+            {
+                <fieldset>
+                    <table>
+                        <tr>
+                            <td class="ui-corner-all" style="width:50%;height:300px;background-color:white;vertical-align:text-top; padding:5px">
+
+                                <div>
+                                    @Html.LabelFor(model => model.FirstName,"First Name")
+                                    @Html.TextBoxFor(model => model.FirstName, new { style = "width: 100%;maxlength:150;margin-bottom:10px;" })
+                                    @{Html.ValidateFor(model => model.FirstName);}
+                                </div>
+                                <div>
+                                    @Html.LabelFor(model => model.LastName,"Last Name")
+                                    @Html.TextBoxFor(model => model.LastName, new { style = "width: 100%;maxlength:150;margin-bottom:10px;" })
+                                    @{Html.ValidateFor(model => model.LastName);}
+                                </div>
+
+                                <div>
+                                    @Html.LabelFor(model => model.Email,"Email")
+                                    @Html.TextBoxFor(model => model.Email, new { style = "width: 100%;maxlength:150;margin-bottom:10px;" })
+                                    @{Html.ValidateFor(model => model.Email);}
+                                </div>
+
+                                <div>
+                                    @Html.LabelFor(model => model.Extension,"Phone Extension")
+                                    @Html.TextBoxFor(model => model.Extension, new { style = "width: 100%;maxlength:150;margin-bottom:10px;" })
+                                    @{Html.ValidateFor(model => model.Extension);}
+                                </div>
+
+                                    <div style="text-align:center;padding-top:15px">
+                                        <input type="submit" id="btnSubmit" value="Submit" />
+                                    </div>
+
+                                </td>
+
+                        </tr>
+
+                    </table>
+                </fieldset>
+                @Html.ValidationSummary(false)
+            }
+
+            <div style="min-height:10px">
+                <label id="lblAddMessage" style="float:left" class="@ViewBag.MsgClass">@ViewBag.AddMessage</label>
+            </div>
+
+        </div>
+    </div>
+    <footer>
+        <div class="content-wrapper">
+            <div class="float-left">
+                <p>&copy; @DateTime.Now.Year - Georgia System Operations Corp</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

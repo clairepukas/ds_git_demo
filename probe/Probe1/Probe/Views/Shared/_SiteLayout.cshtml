@@ -1,0 +1,260 @@
+﻿@using Probe.Models;
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>@Page.Title</title>
+        <script src="~/Scripts/jquery-2.1.3.js"></script>
+        <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+        
+        <link href="~/Content/themes/base/all.css?rfrsh=true" rel="stylesheet" type="text/css" />
+
+        <link href="~/Content/Probe.css?rfrsh=true" rel="stylesheet" type="text/css">
+        <link href="~/Content/Site.css?rfrsh=true" rel="stylesheet" type="text/css" />
+        <link href="~/favicon.ico?rfrsh=true" rel="shortcut icon" type="image/x-icon" />
+
+        <script src="~/Scripts/jquery-ui-1.11.2.js"></script>
+        <script src="~/Scripts/jquery.columnizer.js"></script>
+
+        <script src="~/Scripts/jquery.formatCurrency-1.4.0.min.js"></script>
+        
+        <script src="~/Scripts/modernizr-2.6.2.js"></script>
+        <script src="~/Scripts/ProbeScripts/probe.js?rfrsh=true"></script>
+        <script type="text/javascript" src="~/Scripts/canvasjs-1.5.0/canvasjs.min.js"></script>
+        <meta name="viewport" content="width=device-width" />
+        <script src="~/Scripts/bootstrap.min.js"></script>
+        <script type="text/javascript">
+            $(document).ready(function () {
+                $("#tabs").tabs();
+                //show tabs
+               $("#tabs").css('visibility', 'visible');
+            });
+
+            $(function () {
+                $(".accordion").accordion({
+                    heightStyle: "content",
+                    collapsible: true,
+                    active: false
+                });
+            });
+        </script>
+
+        
+    </head>
+    <body style="overflow-y:scroll">
+        <header style="font-size:14px;">
+            <div class="content-wrapper">
+                <div class="float-left">
+                    <p class="site-title"><a href="~/"><img src="~/Images/PROBE Header Slim.png" width="1300" alt="PROBE Logo" /></a></p>
+                </div>
+                <div style="clear:both"></div>
+                <div>
+                    <section id="login" class="float-right">
+                    @if (WebMatrix.WebData.WebSecurity.IsAuthenticated)
+                    {
+                            <text>
+                                Hello, <span>@WebMatrix.WebData.WebSecurity.CurrentUserName</span>!
+                                
+                                @if (Convert.ToBoolean(Session["UserIsAdmin"].ToString()) == true)
+                                {
+                                    <text>(Admin)</text>
+                                }
+                                else
+                                {
+                                    <text>(User)</text>
+                                }
+                                    
+
+                                @*<form id="logoutForm" action="~/Account/Logout" method="post">
+                                    @AntiForgery.GetHtml()
+                                    <a href="javascript:document.getElementById('logoutForm').submit()">Log out</a>
+                                </form>*@
+                            </text>
+                        } 
+                        else 
+                        {
+                            <ul>
+                                <li><a href="~/Account/Login">Log in</a></li>
+                                <li><a href="~/Account/PasswordReset">Forgot Password</a></li>
+
+                            </ul>
+                        }
+                    </section>
+                    <nav>
+                        
+                            <ul>
+                                <li><a href="~/">Home</a></li>
+                                <li>
+                                    <a href="#">Projects</a>
+                                    <ul>
+                                        <li><a href="~/Home/NewProject">Create New Project</a></li>
+                                        <li><a href="~/Home/Proposed">Proposed Projects</a></li>
+                                        <li><a href="~/Home/Approved">Approved Projects</a></li>
+                                        <li><a href="~/Home/Completed">Completed Projects</a></li>
+                                        <li><a href="~/Home/Cancelled">Cancelled Projects</a></li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <a href="~/Home/Templates">Templates</a>
+                                </li>
+                                <li>
+                                    <a href="~/Home/Reports">Reports</a>
+                                </li>
+
+                                <li>
+                                    <a href="#">Administration</a>
+                                    <ul>
+                                        <li>
+                                            <a href="~/Admin/AdminUsers">Users Admin</a>
+                                        </li>
+                                        <li>
+                                            <a href="~/Admin/AdminEntityResources">Entity Resources Admin</a>
+                                        </li>
+                                        <li>
+                                            <a href="~/Admin/AdminEntity">Entity Admin</a>
+                                        </li>
+                                        <li>
+                                            <a href="~/Admin/AdminResources">Resources Admin</a>
+                                        </li>
+                                        <li>
+                                            <a href="~/Admin/AdminChangeLog">Change Log</a>
+                                        </li>
+                                        <li>
+                                            <a href="~/Admin/AdminTemplates">Templates Admin</a>
+                                        </li>
+                                        <li style="width:200px;">
+                                            <span><a href="#">Table Maintenance Admin</a></span><span style="float:right;font-weight:bold;color:lightgray;font-family:Arial;vertical-align:middle;">></span>
+                                            <ul>
+                                                <li>
+                                                    <a href="~/Admin/AdminTables?tblName=ApprovalActivityStatuses">Project Activity Statuses</a>
+                                                </li>
+                                                <li>
+                                                    <a href="~/Admin/AdminTables?tblName=BenefitGroups">Benefit Groups</a>
+                                                </li>
+                                                <li>
+                                                    <!--<a href="~/Admin/AdminTables?tblName=Benefits">Benefits Admin</a>-->
+                                                    <div id="BenefitsAdmin" style="margin-left:5px;font-weight:bold;color:red;cursor:pointer;">Benefits Admin</div>
+                                                </li>
+                                                <li>
+                                                    <a href="~/Admin/AdminTables?tblName=BudgetStatuses">Budget Statuses</a>
+                                                </li>
+                                                <li>
+                                                    <a href="~/Admin/AdminTables?tblName=BudgetTypes">Budget Types</a>
+                                                </li>
+                                                <li>
+                                                    <a href="~/Admin/AdminTables?tblName=CostSavingsTypes">Cost Savings Types</a>
+                                                </li>
+                                                <li>
+                                                    <a href="~/Admin/AdminTables?tblName=DocumentTypes">Document Types</a>
+                                                </li>
+
+                                                <li>
+                                                    <a href="~/Admin/AdminTables?tblName=ServiceAgreementVendors">Vendors</a>
+                                                </li>
+
+                                                <li>
+                                                    <a href="~/Admin/AdminTables?tblName=EntityTypes">Entity Types</a>
+                                                </li>
+                                                <li>
+                                                    <a href="~/Admin/AdminTables?tblName=AttachmentGroups">Attachment Groups</a>
+                                                </li>
+                                                <li>
+                                                    <a href="~/Admin/AdminTables?tblName=ServiceAgreementTypes">Contractual Agreements</a>
+                                                </li>
+                                                <li>
+                                                    <a href="~/Admin/AdminTables?tblName=ServiceAgreementTypes">Contract Vendors</a>
+                                                </li>
+                                               
+                                                <li>
+                                                    <a href="~/Admin/AdminTables?tblName=Groups">Project Groups</a>
+                                                </li>
+                                                <li>
+                                                    <a href="~/Admin/AdminTables?tblName=Impacts">Impacts Admin</a>
+                                                </li>
+                                                <li>
+                                                    <a href="~/Admin/AdminTables?tblName=IssueStatuses">Issues Statuses</a>
+                                                </li>
+                                                <li>
+                                                    <a href="~/Admin/AdminTables?tblName=Phases">Phases Admin</a>
+                                                </li>
+                                                <li>
+                                                    <a href="~/Admin/AdminTables?tblName=ProjectType">Project Types</a>
+                                                </li>
+                                                <li>
+                                                    <a href="~/Admin/AdminTables?tblName=TemplateTypes">Template Types</a>
+                                                </li>
+                                                
+                                            </ul>
+                                        </li>
+
+                                    </ul>
+                                </li>
+
+                                <li><a href="@ViewBag.HelpUrl" target="_blank">Help</a></li>
+
+                        <li ><span id="searchoption" style="color:#999;">Search</span> <input class="searchBox" style="margin:0px;" name="ReportViewer1_ctl04_ctl00" id="ReportViewer1_ctl04_ctl00" style="width:170px;height:20px;" /></li>
+                       
+
+                            </ul>
+                        
+                    </nav>
+                </div>
+            </div>
+        </header>
+    <div id="body">
+            @RenderSection("featured", required: false)
+            
+        <section class="content-wrapper main-content clear-fix">
+                @RenderBody()
+            </section>
+        </div>
+        <footer>
+            <div class="content-wrapper">
+                <div>
+                    <p>&copy; @DateTime.Now.Year - Georgia System Operations Corp</p>
+                    <p>This application is best viewed with Chrome or Internet Explorer version 9.0 or higher.</p>
+                </div>
+            </div>
+        </footer>
+        @RenderSection("Scripts", required: false)
+
+    </body>
+<script>
+
+    
+
+    $("#searchoption").on("mouseover", function () {
+        $(this).css({ "text-decoration": "underline", "color": "#ddd","cursor":"pointer" })
+    }).on("mouseout", function () {
+        $(this).css({ "text-decoration": "none", "color": "#999" })
+    }).on("click", function () {
+        var name = $.trim($(".searchBox").val());
+        if (name != "") {
+            var acturl = "http://" + location.host + "/" + location.pathname.split("/")[1] + "/Home/SelectedReport?RptNm=Global Search Report&val=" + name;
+            window.open(acturl, '_blank');
+        }
+    })
+
+    $("#ReportViewer1_ctl04_ctl00").on("keydown", function (event) {
+      
+      
+        if (event.keyCode=='13') {
+            var name = $.trim($(".searchBox").val());
+            if (name != "") {
+                var acturl = "http://" + location.host + "/" + location.pathname.split("/")[1] + "/Home/SelectedReport?RptNm=Global Search Report&val=" + name;
+                window.open(acturl, '_blank');
+            }
+        } else {
+            //alert("noper")
+        }
+    })
+
+
+    $("#BenefitsAdmin").unbind("click").on("click", function () {
+        alert("You must submit all new benefits to Marcus Estes or Claire Pukas for manual input.")
+    })
+</script>
+
+</html>

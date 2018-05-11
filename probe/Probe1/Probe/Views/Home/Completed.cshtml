@@ -1,0 +1,113 @@
+﻿@{
+    Layout = "~/Views/Shared/_SiteLayout.cshtml";
+    Page.Title = "Completed Projects";
+    <link href="~/Content/Probe.css" rel="stylesheet" />
+    var srch = Request.QueryString["srch"];
+}
+<br />
+<h3>Completed Projects</h3>
+<br />
+<div class="ui-corner-all DivBorder">
+    <span style="font-size:larger;font-weight:700">Search Completed Projects</span>
+    <input type="text" id="txtSrch" style="margin-right:10px" value="@srch" />
+    <input type="button" id="btnSrch" value="Search" onclick="javascript: FilterCompleted(txtSrch.value.replace(/\%/g, '').replace(/\'/g, ''));" />
+</div>
+
+<div id="dboard-tables" class="content-wrapper">
+    <div class="ui-corner-all ">
+        <table id="proposed" class="homeTables" style="width: 100%;">
+            <tbody>
+                <tr>
+                    <th width="350px">Project Name</th>
+                    <th width="80px">Project #</th>
+                    <th width="70px">Actual Start Date</th>
+                    <th width="70px">Actual End Date</th>
+                    <th width="100px">Activity Status</th>
+                    <th width="110px">Project Manager</th>
+                    <th width="110px">Project Sponsor</th>
+                </tr>
+                @{
+                    try
+                    {
+                        var db = WebMatrix.Data.Database.Open("probedb");
+                        string username = User.Identity.Name;
+                        username = username.Substring(username.IndexOf("\\") + 1);
+                        string sql = @"SELECT p.ProjectId
+                                    ,p.DisplayName
+                                    ,p.ProjectNumber
+                                    ,p.ApprovalStatus
+                                    ,p.ActivityStatus
+                                    ,convert(varchar,ActualStart,101) as StartDate
+                                    ,convert(varchar,ActualEnd,101) as EndDate
+                                    ,(select max( u.DisplayName)
+                                    from Users u
+                                    join ProjectUserRoles a
+                                    on p.ProjectId = a.ProjectId
+                                    and u.UserId = a.UserId
+                                    and a.ProjectRole = 'Manager'
+                                    ) as Manager
+                                    , (select max(u.DisplayName)
+                                    from Users u
+                                    join ProjectUserRoles a
+                                    on p.ProjectId = a.ProjectId
+                                    and u.UserId = a.UserId
+                                    and a.ProjectRole = 'Sponsor'
+                                    ) as Sponsor,";
+
+
+                        sql = sql + " isnull((select   case when isnull(pc.ConfigValue, 'Yes') = 'Yes' ";
+                        sql = sql + " or     dbo.isProbeAdmin_f( '" + username + "' )   =  'Y' ";
+                        sql = sql + " then 'Y'";
+                        sql = sql + " else 'N'";
+                        sql = sql + " end    as Display_Project_Info";
+                        sql = sql + " from   ProjectConfig pc";
+                        sql = sql + " where  p.ProjectId         = pc.ProjectId";
+                        sql = sql + " and    pc.ConfigType       = 'Display Project Info'";
+                        sql = sql + "), 'Y'";
+                        sql = sql + ") as Display_Project_Info";
+
+
+                        sql = sql + " FROM Projects p";
+                        sql = sql + " WHERE p.ApprovalStatus = 'Approved'";
+                        sql = sql + " and p.ActivityStatus = 'Completed' order by p.DisplayName";
+                        var projlist = db.Query(sql);
+
+                        if (!String.IsNullOrEmpty(srch))
+                        {
+                            srch = srch.ToLower();
+                            projlist = projlist.Where(p => (p.Manager != null ? p.Manager : "").ToLower().Contains(srch) || (p.Sponsor != null ? p.Sponsor : "").ToLower().Contains(srch) || (p.DisplayName != null ? p.DisplayName : "").ToLower().Contains(srch) || (p.ProjectNumber != null ? p.ProjectNumber : "").ToLower().Contains(srch) || (p.ActivityStatus != null ? p.ActivityStatus : "").ToLower().Contains(srch));
+                        }
+                        foreach (var proj in projlist)
+                        {
+                            <tr>
+                                <td style="text-align:left"><a href="~/Home/SelectedProject/?id=@proj.ProjectId&fromList=Completed" onclick="javascript: ResetIndex()" id="@proj.ProjectId" class="anchor">@proj.DisplayName</a></td>
+                                <td>@proj.ProjectNumber</td>
+                                <td>@(!String.IsNullOrEmpty(proj.StartDate) ? (DateTime.Parse(proj.StartDate).Year < 2000 ? "" : proj.StartDate) : "")</td>
+                                <td>@(!String.IsNullOrEmpty(proj.EndDate) ? (DateTime.Parse(proj.EndDate).Year < 2000 ? "" : proj.EndDate) : "")</td>
+                                <td>@proj.ActivityStatus</td>
+                                <td>@proj.Manager</td>
+                                <td>@proj.Sponsor</td>
+                            </tr>
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        <tr><td><h3>@ex.Message</h3></td></tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+    </div>
+</div>
+
+<script type="text/javascript">
+    $("#txtSrch").keypress(function (e) {
+        if (e.which == 13) {
+            btnSrch.onclick();
+            $("#txtSrch").focus();
+            var txtBox = document.getElementById("txtSrch");
+            txtBox.focus();
+        }
+    });
+</script>

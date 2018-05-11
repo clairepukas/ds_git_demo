@@ -1,0 +1,13 @@
+﻿
+@{
+    ViewBag.Title = "Templates";
+    Layout = "~/Views/Shared/_SiteLayout.cshtml";
+    
+<link href="~/Content/themes/overcast/jquery-ui.css" rel="stylesheet" />
+}
+<br />
+
+<div>
+    <p><span style="font-size: 14pt;font-weight:500;">Templates</span></p>    
+    @Html.Raw(ViewBag.TemplateHTML)    
+</div>

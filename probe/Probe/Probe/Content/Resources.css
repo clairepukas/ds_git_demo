@@ -1,0 +1,334 @@
+﻿body, a {
+    color: #3B4C56;
+    font-family: sans-serif;
+    font-size: 14px;
+    text-decoration: none;
+}
+#logo
+{
+	width: 505px;
+	margin: 0 auto;
+	text-align: center;
+}
+#pgtitle
+{
+	margin: 0px 0px 20px;
+	font-size: 18pt;
+}
+a{
+	cursor:pointer;
+}
+input
+{
+	text-align:center;
+	width:50px;
+	margin-left:5px;
+}
+div{
+    display:block;
+}
+.radioDiv {
+
+}
+.yearset
+{
+	display:block;
+	float:right;
+
+	margin-left:5px;
+    margin-right:5px;
+    padding-right:5px;
+   
+
+}
+.actyrtitles,.propyrtitles{
+    display:block;
+    text-align:center;
+    margin-right:3px;
+    padding-right:3px;
+    padding-bottom:10px;
+    font-size:.85em;     
+}
+.propyrtitles div + div{
+    float:right;
+}
+
+.tree{
+    margin: 10px 0px;
+    
+}
+.tree ul {
+	clear:both;
+    list-style: none outside none;
+}
+
+.tree li a {
+    line-height: 25px;
+}
+.tree > ul > li > a {
+    color: #3B4C56;
+    display: inline;
+    font-weight: normal;
+    position: relative;
+    text-decoration: none;
+}
+
+    .tree > ul > li > div {
+        float:right;
+    }
+.tree li.parent > a {
+    padding: 0 0 0 28px;
+}
+.tree li.parent > a:before {
+    background-image: url("../images/plus_minus_icons.png");
+    background-position: 25px center;
+     content: ""; 
+    display: block;
+    height: 21px;
+    left: 0;
+    position: absolute;
+    top: 2px;
+    vertical-align: middle;
+    width: 23px;
+}
+.tree li.parent > div{
+background:lightgray;
+border-bottom:double 1px black;
+
+}
+.tree li.parent > div > input {
+    font-weight:bold;
+}
+.tree ul li.active > a:before {
+    background-position: 0 center;
+}
+.tree ul li ul {
+    border-left: 1px solid #D9DADB;
+    display: none;
+    margin: 0 0 0 12px;
+    overflow: hidden;
+    padding: 0 0 0 25px;
+}
+.tree ul li ul li {
+    position: relative;
+}
+.tree ul li ul li:before {
+    border-bottom: 1px dashed #E2E2E3;
+    content: "";
+    left: -20px;
+    position: absolute;
+    top: 12px;
+    width: 15px;
+}
+#wrapper {
+    margin: 0 auto;
+    width: 1250px;
+	border:solid 1px black;
+	padding-right:10px;
+}
+.rsrcLnk {
+    padding-left:10px;
+    padding-right:10px;
+    font-size:.9em;
+    font-weight:bold;
+
+}
+#expand,#collapse{
+    border: solid 1px black;
+    border-radius:5px;
+    margin:0px 5px;
+}
+
+input[type=checkbox]{
+    width:15px;
+    margin-right:5px;
+}
+
+img[id^=info]{
+    margin-left:5px;
+}
+img[id^=info]:hover{
+    cursor:pointer;
+    margin-left:5px;
+}
+
+img[id^=edit]:hover{
+    cursor:pointer;
+ 
+}
+/* since all checkboxes get painted initially unchecked you have to set the unchecked styles first*/
+.tree input[type='checkbox']:checked) + img + a {
+    color:gray;    
+}
+.tree input[type='checkbox']:not(checked)  + img + a + div {
+    display:none;   
+}
+.tree input[type='checkbox']:not(checked)  + img + a + div + div {
+    display:none;   
+}
+
+
+/*now set the checked input and sibling element styles*/
+.tree input[type='checkbox']:checked  + img + a + div {
+    display:inline;   
+}
+
+.tree input[type='checkbox']:checked  + img + a + div + div {
+    display:inline;   
+}
+.tree input[type='checkbox']:checked + img + a{
+    color:black;    
+}
+.tree input[type='checkbox']:checked{
+    background:lightgray;    
+}
+
+
+
+#dialog-modal table input[type=button]{
+    cursor:pointer;
+    width:100px;
+}
+
+#dialog-modal table  tr td span{
+    font-weight:bold;
+}
+
+.tree img[id='blank_icon']{
+    visibility:hidden;
+}
+
+/*Resource Info Dialog form*/
+input[id^=Resource]
+{
+	text-align:left;
+	width:300px;
+	margin-left:20px;
+}
+
+img[id^=addEntity_],img[id^=addRsrc_],img[id^=delEntity_]{
+    margin-left:10px;
+    cursor:pointer;
+}
+img[id^=delRsrc_] {
+        margin-right:6px;
+    cursor:pointer;
+}
+
+
+/** Resrouces Admin  **/
+.listDiv{
+    margin-top:30px;
+}
+.listDiv table tr td img{
+    cursor:pointer;
+}
+
+.btnRsrcAdd{
+    border:solid 1px black;
+    background:lightgray;
+    font-weight:bold;
+    padding:5px;
+    width:300px;
+    margin: 20px 0px;
+}
+
+form[id=frmResources] div{
+    margin:30px;
+}
+.tblEntRsrcLists{
+    border:solid 1px black;
+    border-collapse:collapse;
+    max-width:1100px;
+}
+.tblEntRsrcLists th {
+    border:solid 1px black;
+    padding:5px;
+}
+.tblEntRsrcLists td {
+    border:solid 1px black;
+    padding:5px;
+    
+}
+
+/*Entity Info Dialog form*/
+#frmEntityInfo input[type=text]
+{
+	text-align:left;
+	width:300px;
+	margin-left:20px;
+}
+
+img[id^=editent_],img[id^=delent_]{
+    cursor:pointer;
+}
+.btnEntityAdd{
+    border:solid 1px black;
+    background:lightgray;
+    font-weight:bold;
+    padding:5px;
+    width:300px;
+    margin: 20px 0px;
+}
+form[id=frmEntities] div{
+    margin:30px;
+}
+
+.loader{
+    display:none;
+}
+
+.makeTop{
+        border:solid 1px black;
+    background:lightgray;
+    font-weight:bold;
+    padding:5px;
+    width:300px;
+    margin: 20px 10px;
+    font-size:.85em;
+}
+
+/********* Resource Edits Popup ***********************/
+
+	.mhrWrapper{
+		
+		height:500px;
+		overflow-y:scroll;
+		width:750px;
+        border: 1px solid black;
+	}
+	.mnthWrapper{		
+		height:110px;
+		width:720px;
+		padding:5px;	
+        border-bottom:1px solid black;	
+	}
+	.mnthLbl{
+		font-weight:bold;
+		margin-bottom:10px;
+		color:red;
+	}
+	.iBlock{
+		width:150px;
+		height:100px;		
+		float:left;
+	}
+	.iBlock input{
+		width:65px;
+		text-align:center;
+		margin:5px 3px;
+	}	
+
+	.mhrLbl{
+		font-weight:bold;
+		border:none;
+	}			
+	.cmtBlock{		
+		float:left;
+		margin-left:10px;
+	}
+    	.cmtBlock input{
+		width:85px;
+		text-align:center;
+		margin:5px 3px;
+	}	

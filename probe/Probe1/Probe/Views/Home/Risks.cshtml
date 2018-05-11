@@ -1,0 +1,40 @@
+﻿@{
+    <link href="~/Content/Probe.css?rfrsh=true" rel="stylesheet" />
+    <script src="~/Scripts/ProbeScripts/probe.js?rfrsh=true"></script>
+}
+
+<div>
+    <div class="ui-corner-all" style="width:200px;margin:5px">
+        <h4>Likelihood</h4>
+        <div style="width:200px;float:left;background-color:lightgrey;margin:5px">
+            <input type="radio" class="rskRadio" id="HighLikelihood" name="LikelihoodRadios" value="3" onclick="javascript:UpdateRisk(this)" />High Likelihood<br />
+            <input type="radio" class="rskRadio" id="MediumLikelihood" name="LikelihoodRadios" value="2" onclick="javascript: UpdateRisk(this)" />Medium Likelihood<br />
+            <input type="radio" class="rskRadio" id="LowLikelihood" name="LikelihoodRadios" value="1" onclick="javascript: UpdateRisk(this)" />Low Likelihood<br />
+            <input type="radio" class="rskRadio" id="NoLikelihood" name="LikelihoodRadios" value="0" onclick="javascript: UpdateRisk(this)" />None<br />
+        </div>
+        <div style="padding:5px">
+            "Likelihood" signifies the probability of completing a project on schedule.
+        </div>
+    </div>
+
+    <div class="ui-corner-all" style="width:200px;margin:5px">
+        <h4> Impact</h4>
+        <div style="width:200px;float:left;background-color:lightgrey;margin:5px">
+            <input type="radio" class="rskRadio" id="HighImpact" name="ImpactRadios" value="3" onclick="javascript: UpdateRisk(this)" />High Impact<br />
+            <input type="radio" class="rskRadio" id="MediumImpact" name="ImpactRadios" value="2" onclick="javascript: UpdateRisk(this)" />Medium Impact<br />
+            <input type="radio" class="rskRadio" id="LowImpact" name="ImpactRadios" value="1" onclick="javascript: UpdateRisk(this)" />Low Impact<br />
+            <input type="radio" class="rskRadio" id="NoImpact" name="ImpactRadios" value="0" onclick="javascript: UpdateRisk(this)" />None<br />
+        </div>
+        <div style="padding:5px">
+            "Impact" signifies the operational or financial effect to business(real-time operations) if the project is not completed on schedule.
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $("input[name=LikelihoodRadios][value=" + @ViewBag.Likelihood + "]").prop('checked', true);
+    $("input[name=ImpactRadios][value=" + @ViewBag.Impact + "]").prop('checked', true);
+    DenyAccess('@ViewBag.Access');
+</script>
+
+

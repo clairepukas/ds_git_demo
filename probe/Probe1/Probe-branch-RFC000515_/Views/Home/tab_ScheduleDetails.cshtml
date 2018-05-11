@@ -1,0 +1,703 @@
+﻿@{
+    Layout = "~/Views/Shared/_SiteLayout.cshtml";
+    Page.Title = "Selected Project";
+
+    <link href="~/Content/Probe.css" rel="stylesheet" />
+    var projId = 905;// Request.QueryString["id"];//878,815,905(issues)
+    
+} 
+
+@{
+    try
+    {
+        //Get selected proj
+        var db = WebMatrix.Data.Database.Open("probedb");
+        var myProject = db.Query(@"SELECT a.ProjectId
+                                          ,ProjectNumber
+                                          ,ProjectName
+                                          ,DisplayName
+                                          ,BudgetNum
+                                          ,Priority
+                                          ,Health
+                                          ,Scope
+                                          ,Comments
+                                          ,Customer
+                                          ,CarryOver
+                                          ,ProjectType
+                                          ,RiskLikelihood
+                                          ,RiskImpact
+                                          ,ApprovalStatus
+                                          ,ActivityStatus
+                                      	  ,'$'+ CONVERT(varchar, CAST(sum(Amount) as money), 1) as BudgetedTotal
+                                          ,BudgetType
+                                      FROM probe.dbo.Projects a
+                                      join probe.dbo.ProjectBudgets b
+                                      on a.ProjectId = b.ProjectId
+                                      and a.ProjectType = b.BudgetType
+                                      where a.ProjectId = @0
+                                      group by a.ProjectId
+                                          ,ProjectNumber
+                                          ,ProjectName
+                                          ,DisplayName
+                                          ,BudgetNum
+                                          ,Priority
+                                          ,Health
+                                          ,Scope
+                                          ,Comments
+                                          ,Customer
+                                          ,CarryOver
+                                          ,ProjectType
+                                          ,RiskLikelihood
+                                          ,RiskImpact
+                                          ,ApprovalStatus
+                                          ,ActivityStatus
+                                          ,BudgetType", projId);
+        
+        //Get proj dates
+        var propProjDates = db.Query(@"SELECT ProjectDateId
+                                  ,ProjectId
+                                  ,DateType
+	                              ,convert(varchar,StartDate,101) as StartDate
+                                  ,convert(varchar,EndDate,101) as EndDate
+                              FROM probe.dbo.ProjectDates a
+                              join probe.dbo.ProjectDateType b
+                              on a.ProjectDateTypeId = b.ProjectDateTypeId
+                              and DateType = 'Proposed'
+                              where ProjectId = @0",projId);
+
+        var projProjDates = db.Query(@"SELECT ProjectDateId
+                                  ,ProjectId
+                                  ,DateType
+	                              ,convert(varchar,StartDate,101) as StartDate
+                                  ,convert(varchar,EndDate,101) as EndDate
+                              FROM probe.dbo.ProjectDates a
+                              join probe.dbo.ProjectDateType b
+                              on a.ProjectDateTypeId = b.ProjectDateTypeId
+                              and DateType = 'Projected'
+                              where ProjectId = @0", projId);
+
+        var actProjDates = db.Query(@"SELECT ProjectDateId
+                                  ,ProjectId
+                                  ,DateType
+	                              ,convert(varchar,StartDate,101) as StartDate
+                                  ,convert(varchar,EndDate,101) as EndDate
+                              FROM probe.dbo.ProjectDates a
+                              join probe.dbo.ProjectDateType b
+                              on a.ProjectDateTypeId = b.ProjectDateTypeId
+                              and DateType = 'Actual'
+                              where ProjectId = @0", projId);
+        
+        
+        
+        //Get Project Manager Dropdown
+        
+        var managers = db.Query(@"SELECT Distinct  b.[UserId]
+	                                  ,b.UserName
+                                  FROM [probe].[dbo].[ProjectUserRoles] a
+                                  join [probe].[dbo].Users b
+                                  on a.UserId = b.UserId
+                                  join [probe].[dbo].[Projects] d
+                                  on a.ProjectId = d.ProjectId
+                                  where a.ProjectRole = 'Manager'");
+
+        var selMgr = db.QueryValue(@"SELECT   b.[UserId]	                                  
+                                  FROM [probe].[dbo].[ProjectUserRoles] a
+                                  join [probe].[dbo].Users b
+                                  on a.UserId = b.UserId
+                                  join [probe].[dbo].[Projects] d
+                                  on a.ProjectId = d.ProjectId
+                                  where a.ProjectRole = 'Manager'
+                                  and d.ProjectId = @0", projId);
+      
+        
+        //Get Project Sponsor Dropdown
+        var sponsors = db.Query(@"SELECT Distinct  b.[UserId]
+	                                  ,b.UserName
+                                  FROM [probe].[dbo].[ProjectUserRoles] a
+                                  join [probe].[dbo].Users b
+                                  on a.UserId = b.UserId
+                                  join [probe].[dbo].[Projects] d
+                                  on a.ProjectId = d.ProjectId
+                                  where a.ProjectRole = 'Sponsor'");
+
+        var selSpon = db.QueryValue(@"SELECT b.[UserId]
+                                  FROM [probe].[dbo].[ProjectUserRoles] a
+                                  join [probe].[dbo].Users b
+                                  on a.UserId = b.UserId
+                                  join [probe].[dbo].[Projects] d
+                                  on a.ProjectId = d.ProjectId
+                                  where a.ProjectRole = 'Sponsor'
+                                  and d.ProjectId = @0", projId);
+        
+        //Get Project Engineers Dropdown
+        var engineers = db.Query(@"SELECT Distinct  b.[UserId]
+	                                  ,b.UserName
+                                  FROM [probe].[dbo].[ProjectUserRoles] a
+                                  join [probe].[dbo].Users b
+                                  on a.UserId = b.UserId
+                                  join [probe].[dbo].[Projects] d
+                                  on a.ProjectId = d.ProjectId
+                                  where a.ProjectRole = 'Engineer'");
+
+        var selEng = db.QueryValue(@"SELECT b.[UserId]
+                                  FROM [probe].[dbo].[ProjectUserRoles] a
+                                  join [probe].[dbo].Users b
+                                  on a.UserId = b.UserId
+                                  join [probe].[dbo].[Projects] d
+                                  on a.ProjectId = d.ProjectId
+                                  where a.ProjectRole = 'Engineer'
+                                  and d.ProjectId = @0", projId);
+
+        //Get Project Creators Dropdown
+        var creators = db.Query(@"SELECT Distinct  b.[UserId]
+	                                  ,b.UserName
+                                  FROM [probe].[dbo].[ProjectUserRoles] a
+                                  join [probe].[dbo].Users b
+                                  on a.UserId = b.UserId
+                                  join [probe].[dbo].[Projects] d
+                                  on a.ProjectId = d.ProjectId
+                                  where a.ProjectRole = 'Creator'");
+
+        var selCtr = db.QueryValue(@"SELECT b.[UserId]
+                                  FROM [probe].[dbo].[ProjectUserRoles] a
+                                  join [probe].[dbo].Users b
+                                  on a.UserId = b.UserId
+                                  join [probe].[dbo].[Projects] d
+                                  on a.ProjectId = d.ProjectId
+                                  where a.ProjectRole = 'Creator'
+                                  and d.ProjectId = @0", projId);
+        
+        
+        //Get updates
+            var updatelist = db.Query(@"Select a.ProjectUpdateId
+                                                      ,ProjectId
+                                                      ,Explanation
+                                                      ,b.UserName
+                                                      ,a.createDt
+                                                  FROM [probe].[dbo].[ProjectUpdates] a
+                                                  join [probe].[dbo].[Users] b
+                                                  on a.UpdateOwner = b.UserId
+                                                  where ProjectId = @0 order by a.createDt desc", projId);
+        
+        //Get Project Issues
+            var issueList = db.Query(@"SELECT  ProjectIssueId
+                                              ,Explanation
+                                              ,Resolution
+                                              ,IssueStatus
+	                                          ,TargetDate
+                                              ,b.UserName 
+	                                          ,a.createDt
+                                          FROM probe.dbo.ProjectIssues a
+                                            join probe.dbo.Users b
+                                            on a.IssueOwner = b.UserId
+                                          WHERE ProjectId = @0 order by a.createDt desc", projId);
+        
+        foreach (var proj in myProject)
+        {
+        
+
+        <br /><br />
+        <div style="background-color:beige; width:100%;">
+            <span style="background-color: beige;font-family:'Times New Roman', Times, serif; font-size: 16pt;">Selected Project</span>
+            <input type="text" readonly="readonly" style="width:500px;" value="@proj.ProjectName" />&nbsp;<input type="button" value="Checkout for Edit" /> &nbsp;<input type="button" value="Check-In & Save" />
+        </div>
+
+        <div id="tabs">
+            <ul>
+                <li><a href="#tabs-1">Project Info</a></li>
+                <li><a href="#tabs-2">Budget Details</a></li>
+                <li><a href="#tabs-3">Schedule Details</a></li>
+                <li><a href="#tabs-4">Benefit Details</a></li>
+                <li><a href="#tabs-5">Resource Details</a></li>
+                <li><a href="#tabs-6">Impact to Operations</a></li>
+                <li><a href="#tabs-7">Risk Details</a></li>
+                <li><a href="#tabs-8">Change Log</a></li>
+            </ul>
+            <div id="tabs-1" style="clear:both;">
+                <div style="background-color:beige; width:100%;">
+                    <span style="font-size: 16pt;">Project Information</span>
+                </div>
+                <table class="projInfoTable">
+                    <tr>
+                        <td><label class="label" for="pName">Project Name</label></td>
+                        <td><input class="textBox" type="text" id="pName" value="@proj.DisplayName" /></td>
+                        <td><label class="label" for="pNum">Project #</label></td>
+                        <td><label class="label" style="font-weight:400;">@proj.ProjectNumber</label></td>
+                        <td><label class="label" for="bNum">Budget #</label></td>
+                        <td><input class="textBox" type="text" id="bNum" value="@proj.BudgetNum" style="width:100px;" /></td>
+                        <td><label class="label" for="bType">Budget Type</label></td>
+                        <td>
+                            <select id="bType" style="font-family:'Times New Roman', Times, serif; font-size:10pt;">
+                                @if (proj.BudgetType == "Capital")
+                                {
+                                    <option value="capital" selected="selected">Capital</option>
+                                    <option value="expense">Expense</option>
+                                }
+                                else if (proj.BudgetType == "Expense")
+                                {
+                                    <option value="capital">Capital</option>
+                                    <option value="expense" selected="selected">Expense</option>
+                                }
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                <table class="projInfoTable">
+                    <tr>
+                        <td><label class="label" for="pMan">Project Manager</label></td>
+
+                        <td>
+                            <select id="pMan" style="font-family:'Times New Roman', Times, serif; font-size:9pt;">
+                                <option value="" selected="selected"></option>
+                                @foreach(var man in managers){
+                                    if (man.UserId == selMgr) 
+                                    { 
+                                        <option value="@man.UserId" selected="selected">@man.UserName</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@man.UserId">@man.UserName</option>
+                                    }
+                                }
+                            </select>
+                        </td>
+                        <td><label class="label" for="pSpon">Project Sponsor</label></td>
+                        <td>
+                            <select id="pSpon" style="font-family:'Times New Roman', Times, serif; font-size:9pt;">
+                                <option value="" selected="selected"></option>
+                                @foreach (var spon in sponsors)
+                                {
+                                    if (spon.UserId == selSpon) 
+                                    { 
+                                        <option value="@spon.UserId" selected="selected">@spon.UserName</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@spon.UserId">@spon.UserName</option>
+                                    }
+                                }
+                            </select>
+                        </td>
+                        <td><label class="label" for="pEng">Project Engineer</label></td>
+                        <td>
+                            <select id="pEng" style="font-family:'Times New Roman', Times, serif; font-size:9pt;">
+                                <option value=""selected="selected"></option>
+                                @foreach (var eng in engineers)
+                                {
+                                    if (eng.UserId == selEng)
+                                    { 
+                                        <option value="@eng.UserId" selected="selected">@eng.UserName</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@eng.UserId">@eng.UserName</option>
+                                    }
+                                }
+                            </select>
+                        </td>
+                        <td><label class="label">Project Creator</label></td>
+                        <td>
+                            <select id="pEng" style="font-family:'Times New Roman', Times, serif; font-size:9pt;">
+                                <option value="" selected="selected"></option>
+                                @foreach (var ctr in creators)
+                                {
+                                    if (ctr.UserId == selCtr)
+                                    {
+                                        <option value="@ctr.UserId" selected="selected">@ctr.UserName</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@ctr.UserId">@ctr.UserName</option>
+                                    }
+                                }
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                <table class="projInfoTable">
+                    <tr>
+                        <td><label class="label" for="pScope">Scope</label></td>
+                        <td><textarea id="pScope" cols="40" rows="2"  style="width:825px;font-family:'Times New Roman', Times, serif; font-size:9pt;">@proj.Scope</textarea></td>
+                    </tr>
+                </table>
+                <table class="projInfoTable">
+                    <tr>
+                        @if (propProjDates.Count() > 0) { 
+                            foreach (var prop in propProjDates) { 
+                                <td><label class="label" for="pStartDt">Proposed Start Date</label></td>
+                                <td><input class="textBox" type="text" id="pStartDt" style="width:80px;" value="@prop.StartDate" /></td>
+                                <td><label class="label" for="pEndDt">Proposed End Date</label></td>
+                                <td><input class="textBox" type="text" id="pEndDt" style="width:80px;" value="@prop.EndDate" /></td>
+                                }
+                            }
+                            else
+                            {
+                                <td><label class="label" for="pStartDt">Proposed Start Date</label></td>
+                                <td><input class="textBox" type="text" id="pStartDt" style="width:80px;" /></td>
+                                <td><label class="label" for="pEndDt">Proposed End Date</label></td>
+                                <td><input class="textBox" type="text" id="pEndDt" style="width:80px;" /></td>
+                            }                        
+                        <td><label class="label" for="aStat">Activity Status</label></td>
+                        <td>
+                            <select id="aStat" style="font-family:'Times New Roman', Times, serif; font-size:9pt;">
+                                <option value="InProgress">In Progress</option>
+                                <option value="Cancelled">Cancelled</option>
+                                <option value="Complete">Complete</option>
+                            </select>
+                        </td>
+                        <td><label class="label">Budgeted Total</label></td>
+                        <td><label class="label" style="font-weight:400;font-size:9pt;">@proj.BudgetedTotal</label></td>
+                        <td><label class="label">Current Phase</label></td>
+                        <td><label class="label" style="font-weight:400;">Planning</label></td>
+                    </tr>
+                </table>
+                <table class="projInfoTable">
+                    <tr>
+                        @if (projProjDates.Count() > 0) {
+                            foreach (var projected in projProjDates) {
+                            <td><label class="label" for="projStartDt">Projected Start Date</label></td>
+                            <td><input class="textBox" type="text" id="projStartDt" style="width:80px;" value="@projected.StartDate" /></td>
+                            <td><label class="label" for="pEndDt">Projected End Date</label></td>
+                            <td><input class="textBox" type="text" id="projEndDt" style="width:80px;" value="@projected.EndDate" /></td>
+                            }
+                        }
+                        else
+                        {
+                            <td><label class="label" for="projStartDt">Projected Start Date</label></td>
+                            <td><input class="textBox" type="text" id="projStartDt" style="width:80px;" /></td>
+                            <td><label class="label" for="pEndDt">Projected End Date</label></td>
+                            <td><input class="textBox" type="text" id="projEndDt" style="width:80px;" /></td>
+                        }
+                        <td><label class="label" for="priority">Priority</label></td>
+                        @if(proj.Priority == true)
+                        { 
+                            <td><input type="checkbox" id="priority" checked="checked" /></td>
+                        }
+                        else
+                        {
+                            <td><input type="checkbox" id="priority" /></td>
+                        }
+                        <td><label class="label">Projected Total</label></td>
+                        <td><label class="label" style="font-weight:400;">$130,000,000</label></td>
+                        <td><label class="label">Total % Complete</label></td>
+                        <td><label class="label" style="font-weight:400;">50</label></td>
+                    </tr>
+                </table>
+                <table class="projInfoTable">
+                    <tr>
+                        @if (actProjDates.Count() > 0) {
+                            foreach (var act in actProjDates) {
+                            <td><label class="label" for="actStartDt">Actual Start Date</label></td>
+                            <td><input class="textBox" type="text" id="actStartDt" style="width:80px;" value="@act.StartDate" /></td>
+                            <td><label class="label" for="pEndDt">Actual End Date</label></td>
+                            <td><input class="textBox" type="text" id="projEndDt" style="width:80px;" value="@act.EndDate" /></td>
+                            }
+                        }
+                        else
+                        {
+                            <td><label class="label" for="actStartDt">Actual Start Date</label></td>
+                            <td><input class="textBox" type="text" id="actStartDt" style="width:80px;" /></td>
+                            <td><label class="label" for="pEndDt">Actual End Date</label></td>
+                            <td><input class="textBox" type="text" id="projEndDt" style="width:80px;" /></td>
+                        }
+                        <td><label class="label" for="cust">Customer</label></td>
+                        <td>
+                            <select id="cust" style="font-family:'Times New Roman', Times, serif; font-size:9pt;">
+                                <option value="Ops">GSOC Ops</option>
+                                <option value="Shared">Shared Services</option>
+                                <option value="Telecom">Telecom</option>
+                            </select>
+                        </td>
+                        <td><label class="label">Actual Total</label></td>
+                        <td><label class="label" style="font-weight:400;">$130,000</label></td>
+                    </tr>
+                </table>
+                <table class="projInfoTable">
+                    <tr>
+                        <td><label class="label" for="comments">Comments</label></td>
+                        <td><textarea id="comments" cols="40" rows="2" style="width:825px;font-family:'Times New Roman', Times, serif; font-size:9pt;">@proj.Comments</textarea></td>
+                    </tr>
+                </table> 
+                
+                @* Updates Section *@
+                <div class="ui-corner-all table-div">
+
+                    <table>
+                        <tr>
+                            <td style="vertical-align:top;"><label class="label">Updates</label></td>
+                            <td style="width:auto;">
+                                <div class="ui-corner-all" style="height:150px;width:790px;overflow-y:auto;overflow-x:hidden;">
+                                    <table class="projInfoUpdateTable">
+                                        <tr>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th>Date Created</th>
+                                            <th>Explanation</th>
+                                            <th>Owner</th>
+                                        </tr>
+                                        @{
+                                            if (updatelist.Count() > 0)
+                                            {
+                                                foreach (var updt in updatelist)
+                                                {
+                                        <tr>
+                                            <td><img src='~/Images/delete.png' alt='Delete' class='btnDelete' style="cursor:pointer;" /></td>
+                                            <td><img src='~/Images/pencil.png' alt='Edit' class='btnEdit' style="cursor:pointer;" onclick="EditUpdate('@Html.Raw(HttpUtility.JavaScriptStringEncode(updt.Explanation))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(updt.UserName))','@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(updt.ProjectUpdateId)))');" /></td>
+                                            <td><img src='~/Images/zoom.png' alt='View' class='btnView' style="cursor:pointer;" onclick="ViewUpdate('@Html.Raw(HttpUtility.JavaScriptStringEncode(updt.Explanation))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(updt.UserName))');" /></td>
+                                            <td><div class="updates" style="width:130px;" id="updateCreateDt">@updt.createDt</div></td>
+                                            <td><div class="updates" style="width:450px;">@updt.Explanation</div></td>
+                                            <td><div class="updates" style="width:110px;" id="updateOwner">@updt.UserName</div></td>
+                                        </tr>
+                                                }
+                                            }
+                                            else
+                                            {
+                                        <tr>
+                                            <td><img src='~/Images/delete.png' alt='Delete' class='btnDelete' /></td>
+                                            <td><img src='~/Images/pencil.png' alt='Edit' class='btnEdit' /></td>
+                                            <td><img src='~/Images/zoom.png' alt='View' class='btnView' /></td>
+                                            <td><div class="updates" style="width:140px;" id="updateCreateDt"></div></td>
+                                            <td><div class="updates" style="width:500px;"></div></td>
+                                            <td><div class="updates" style="width:115px;" id="updateOwner"></div></td>
+                                        </tr>
+                                            }
+                                        }
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <script type="text/javascript">
+                        //Handles the view click on the updates section
+                        function ViewUpdate(updtExpl, updtUser) {
+                            $(function () {
+                                $("#dialog-message").dialog({
+                                    width: 600,
+                                    modal: true,
+                                    buttons: {
+                                        "Close": function () {
+                                            $(this).dialog("close");
+                                        }
+                                    }
+                                });
+                            });
+
+                            document.getElementById('dialog-message').innerHTML = "<table><tr><td>Project</td><td><center>" + '@proj.ProjectName' +
+                                                                                  "</center></td></tr><tr><td>Owner</td><td><center>" + updtUser +
+                                                                                  "</center></td></tr><tr><td>Explanation</td>" +
+                                                                                  "<td><textarea readonly rows='4' style='font-family:'Times New Roman', Times, serif; font-size:10pt;'>" + updtExpl +
+                                                                                  "</textarea></td></tr></table>";
+                        }
+                        
+                        //Save Edits to ProjectUpdates back to the database.
+                        function saveUpdateEdits() {
+                            var id = document.getElementById("updtID").value;
+                            var txt = document.getElementById("expTxt").value;
+                            var myData = { updateID: id, updateTxt: txt };
+                            //$.ajaxSetup({ cache: false });
+                            $.ajax({
+                                type: 'POST',
+                                url: '@Url.Action("changeUpdate","Home")',
+                                data: myData,
+                                async: false
+                            })
+                                .success(function (msg) {
+                                    alert("Update completed successfully.");
+                                    $(this).dialog("close");
+                                })
+                                .fail(function (msg) {
+                                    alert("There was an error while updating.");
+                                    $(this).dialog("close");
+                                });
+                        };
+                                                      
+                        
+
+                        //Handles the edit click on the updates section
+                        function EditUpdate(updtExpl, updtUser, updtID) {
+                            $(function () {
+                                $("#dialog-message").dialog({
+                                    width: 600,
+                                    modal: true,
+                                    buttons: {
+                                        "Update": saveUpdateEdits,
+                                        Cancel: function () {
+                                            $(this).dialog("close");
+                                        }
+                                    }
+                                });
+                            });
+
+                            document.getElementById('dialog-message').innerHTML = "<form id='editUpdateForm'><fieldset><input type='hidden' id='updtID' value='" + updtID +
+                                                                                  "'/><table><tr><td>Project</td><td><center>" + '@proj.ProjectName' +
+                                                                                  "</center></td></tr><tr><td>Owner</td><td><center>" + updtUser +
+                                                                                  "</center></td></tr><tr><td>Explanation</td>" +
+                                                                                  "<td><textarea id='expTxt' rows='4' style='font-family:'Times New Roman', Times, serif; font-size:10pt;'>" + updtExpl +
+                                                                                  "</textarea></td></tr><tr><td><input type='submit' tabindex='-1' style='position:absolute; top:-1000px'></td></tr></table></fieldset></form>";
+                        }
+
+                    </script>
+
+                </div>
+               @* End Updates Section *@                
+
+                <div id="dialog-message" title="View Update"></div>                
+
+                @* Issues Section *@
+                <div class="ui-corner-all table-div">
+
+                    <table>
+                        <tr>
+                            <td style="vertical-align:top;"><label class="label">Issues</label></td>
+                            <td>
+                                <div class="ui-corner-all" style="height:150px;width:790px;overflow-y:auto;overflow-x:hidden;">
+                                    <table class="projInfoUpdateTable">
+                                        <tr>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th>Date Created</th>
+                                            <th>Explanation</th>
+                                            <th>Owner</th>
+                                        </tr>
+                                        @{
+                                            if (issueList.Count() > 0)
+                                            {
+                                                foreach (var iss in issueList)
+                                                {
+                                            <tr>
+                                                <td><img src='~/Images/delete.png' alt='Delete' class='btnDelete' style="cursor:pointer;" /></td>
+                                                <td><img src='~/Images/pencil.png' alt='Edit' class='btnEdit' style="cursor:pointer;" onclick="EditIssue('@Html.Raw(HttpUtility.JavaScriptStringEncode(iss.Explanation))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(iss.UserName))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(iss.IssueStatus))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(iss.TargetDate)))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(iss.Resolution))');" /></td>
+                                                <td><img src='~/Images/zoom.png' alt='View' class='btnView' style="cursor:pointer;" onclick="ViewIssue('@Html.Raw(HttpUtility.JavaScriptStringEncode(iss.Explanation))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(iss.UserName))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(iss.IssueStatus))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(iss.TargetDate)))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(iss.Resolution))');" /></td>
+                                                <td><div class="updates" style="width:130px;" id="updateCreateDt">@iss.createDt</div></td>
+                                                <td><div class="updates" style="width:450px;">@iss.Explanation</div></td>
+                                                <td><div class="updates" style="width:110px;" id="updateOwner">@iss.UserName</div></td>
+                                            </tr>
+                                                }
+                                            }
+                                            else
+                                            {
+                                            <tr>
+                                                <td><img src='~/Images/delete.png' alt='Delete' class='btnDelete' /></td>
+                                                <td><img src='~/Images/pencil.png' alt='Edit' class='btnEdit' /></td>
+                                                <td><img src='~/Images/zoom.png' alt='View' class='btnView' /></td>
+                                                <td><div class="updates" style="width:140px;" id="updateCreateDt"></div></td>
+                                                <td><div class="updates" style="width:500px;"></div></td>
+                                                <td><div class="updates" style="width:115px;" id="updateOwner"></div></td>
+                                            </tr>
+                                            }
+                                        }
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <script>
+                    //Handles the view click on the issues section
+                    function ViewIssue(issExpl, issUser, issStat, issTgtDate, issRes) {
+                        $(function () {
+                            $("#dialog-message").dialog({
+                                width: 600,
+                                modal: true,
+                                buttons: {
+                                    "Close": function () {
+                                        $(this).dialog("close");
+                                    }
+                                }
+                            });
+                        });
+
+                        document.getElementById('dialog-message').innerHTML = "<table><tr><td>Project</td><td><center>" + '@proj.ProjectName' +
+                                                                              "</center></td></tr><tr><td>Owner</td><td><center>" + issUser +
+                                                                              "</center></td></tr><tr><td>Explanation</td>" +
+                                                                              "<td><textarea readonly rows='4' style='font-family:'Times New Roman', Times, serif; font-size:10pt;'>" + issExpl +
+                                                                              "</textarea></td></tr><tr><td>Status</td><td><input class='textBox' type='text' value='" + issStat +
+                                                                              "'/></td></tr><tr><td>Target Date</td><td><input class='textBox' type='text' value='" + issTgtDate +
+                                                                              "'</tr><tr><td>Resolution</td><td><textarea readonly rows='4' style='font-family:'Times New Roman', Times, serif; font-size:10pt;'>" + issRes +
+                                                                              "</textarea></td></tr></table>";
+                    }
+
+                    //Save Edits to ProjectIssues back to the database.
+                    function saveIssueEdits() {
+                        var a = document.getElementById("issExpl").value;
+                        var b = document.getElementById("issStatus").value;
+                        var c = document.getElementById("issTgtDate").value;
+                        var d = document.getElementById("issRes").value;
+                        $(this).dialog("close");
+                        alert(a);
+                        alert(b);
+                        alert(c);
+                        alert(d);
+                        alert("Update successful.");
+                    }
+
+
+
+                    //Handles the edit click on the issues section
+                    function EditIssue(issExpl, issUser, issStat, issTgtDate, issRes) {
+                        $(function () {
+                            $("#dialog-message").dialog({
+                                width: 600,
+                                modal: true,
+                                buttons: {
+                                    "Update": saveIssueEdits,
+                                    Cancel: function () {
+                                        $(this).dialog("close");
+                                    }
+                                }
+                            });
+                        });
+
+                        document.getElementById('dialog-message').innerHTML = "<form><fieldset><table><tr><td>Project</td><td><center>" + '@proj.ProjectName' +
+                                                                                "</center></td></tr><tr><td>Owner</td><td><center>" + issUser +
+                                                                                "</center></td></tr><tr><td>Explanation</td>" +
+                                                                                "<td><textarea id='issExpl' rows='4' style='font-family:'Times New Roman', Times, serif; font-size:10pt;'>" + issExpl +
+                                                                                "</textarea></td></tr><tr><td>Status</td><td><input class='textBox' type='text' id='issStatus' value='" + issStat +
+                                                                                "'/></td></tr><tr><td>Target Date</td><td><input class='textBox' type='text' id='issTgtDate' value='" + issTgtDate +
+                                                                                "'</tr><tr><td>Resolution</td><td><textarea  id='issRes' rows='4' style='font-family:'Times New Roman', Times, serif; font-size:10pt;'>" + issRes +
+                                                                                "</textarea></td></tr></table></fieldset></form>";
+                    }
+
+                    </script>
+
+                </div>
+                @* End Issues Section *@
+
+                </div>
+            <div id="tabs-2"> <!-- Budget Details tab -->
+                <p>Morbi tincidunt, dui sit amet facilisis feugiat, odio metus gravida ante, ut pharetra massa metus id nunc. Duis scelerisque molestie turpis. Sed fringilla, massa eget luctus malesuada, metus eros molestie lectus, ut tempus eros massa ut dolor. Aenean aliquet fringilla sem. Suspendisse sed ligula in ligula suscipit aliquam. Praesent in eros vestibulum mi adipiscing adipiscing. Morbi facilisis. Curabitur ornare consequat nunc. Aenean vel metus. Ut posuere viverra nulla. Aliquam erat volutpat. Pellentesque convallis. Maecenas feugiat, tellus pellentesque pretium posuere, felis lorem euismod felis, eu ornare leo nisi vel felis. Mauris consectetur tortor et purus.</p>
+            </div>
+            <div id="tabs-3"> <!-- Phases Details tab -->
+                @RenderPage("")
+            </div>
+            <div id="tabs-4"><!-- Benefit Details tab -->
+                <p>Proin elit arcu, rutrum commodo, vehicula tempus, commodo a, risus. Curabitur nec arcu. Donec sollicitudin mi sit amet mauris. Nam elementum quam ullamcorper ante. Etiam aliquet massa et lorem. Mauris dapibus lacus auctor risus. Aenean tempor ullamcorper leo. Vivamus sed magna quis ligula eleifend adipiscing. Duis orci. Aliquam sodales tortor vitae ipsum. Aliquam nulla. Duis aliquam molestie erat. Ut et mauris vel pede varius sollicitudin. Sed ut dolor nec orci tincidunt interdum. Phasellus ipsum. Nunc tristique tempus lectus.</p>
+            </div>
+            <div id="tabs-5"><!-- Resource Details tab -->
+                <p>Morbi tincidunt, dui sit amet facilisis feugiat, odio metus gravida ante, ut pharetra massa metus id nunc. Duis scelerisque molestie turpis. Sed fringilla, massa eget luctus malesuada, metus eros molestie lectus, ut tempus eros massa ut dolor. Aenean aliquet fringilla sem. Suspendisse sed ligula in ligula suscipit aliquam. Praesent in eros vestibulum mi adipiscing adipiscing. Morbi facilisis. Curabitur ornare consequat nunc. Aenean vel metus. Ut posuere viverra nulla. Aliquam erat volutpat. Pellentesque convallis. Maecenas feugiat, tellus pellentesque pretium posuere, felis lorem euismod felis, eu ornare leo nisi vel felis. Mauris consectetur tortor et purus.</p>
+            </div>
+            <div id="tabs-6"><!-- Impact Details tab -->
+                <p>Mauris eleifend est et turpis. Duis id erat. Suspendisse potenti. Aliquam vulputate, pede vel vehicula accumsan, mi neque rutrum erat, eu congue orci lorem eget lorem. Vestibulum non ante. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Fusce sodales. Quisque eu urna vel enim commodo pellentesque. Praesent eu risus hendrerit ligula tempus pretium. Curabitur lorem enim, pretium nec, feugiat nec, luctus a, lacus.</p>
+                <p>Duis cursus. Maecenas ligula eros, blandit nec, pharetra at, semper at, magna. Nullam ac lacus. Nulla facilisi. Praesent viverra justo vitae neque. Praesent blandit adipiscing velit. Suspendisse potenti. Donec mattis, pede vel pharetra blandit, magna ligula faucibus eros, id euismod lacus dolor eget odio. Nam scelerisque. Donec non libero sed nulla mattis commodo. Ut sagittis. Donec nisi lectus, feugiat porttitor, tempor ac, tempor vitae, pede. Aenean vehicula velit eu tellus interdum rutrum. Maecenas commodo. Pellentesque nec elit. Fusce in lacus. Vivamus a libero vitae lectus hendrerit hendrerit.</p>
+            </div>
+            <div id="tabs-7"><!-- Risk Details tab -->
+                <p>Proin elit arcu, rutrum commodo, vehicula tempus, commodo a, risus. Curabitur nec arcu. Donec sollicitudin mi sit amet mauris. Nam elementum quam ullamcorper ante. Etiam aliquet massa et lorem. Mauris dapibus lacus auctor risus. Aenean tempor ullamcorper leo. Vivamus sed magna quis ligula eleifend adipiscing. Duis orci. Aliquam sodales tortor vitae ipsum. Aliquam nulla. Duis aliquam molestie erat. Ut et mauris vel pede varius sollicitudin. Sed ut dolor nec orci tincidunt interdum. Phasellus ipsum. Nunc tristique tempus lectus.</p>
+            </div>
+            <div id="tabs-8"><!-- Change Log tab -->
+                <p>Morbi tincidunt, dui sit amet facilisis feugiat, odio metus gravida ante, ut pharetra massa metus id nunc. Duis scelerisque molestie turpis. Sed fringilla, massa eget luctus malesuada, metus eros molestie lectus, ut tempus eros massa ut dolor. Aenean aliquet fringilla sem. Suspendisse sed ligula in ligula suscipit aliquam. Praesent in eros vestibulum mi adipiscing adipiscing. Morbi facilisis. Curabitur ornare consequat nunc. Aenean vel metus. Ut posuere viverra nulla. Aliquam erat volutpat. Pellentesque convallis. Maecenas feugiat, tellus pellentesque pretium posuere, felis lorem euismod felis, eu ornare leo nisi vel felis. Mauris consectetur tortor et purus.</p>
+            </div>
+        </div>
+    
+        }
+    }
+    catch (Exception ex)
+    {
+        <h3>@ex.Message</h3>
+    }
+
+}
+
+

@@ -1,0 +1,22 @@
+﻿@{
+    <link href="~/Content/Probe.css?rfrsh=true" rel="stylesheet" />
+    <script src="~/Scripts/ProbeScripts/probe.js?rfrsh=true"></script>
+}
+
+<div id="dboard-tables" class="content-wrapper">
+    <div id="DynamicContent" class="content-wrapper">
+        @Html.Raw(ViewBag.DynamicImpacts)
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    //if (!Modernizr.csscolumns) {
+    //    $(".colWrap2").columnize({ columns: 2, lastNeverTallest: true, buildOnce: true });
+    //}
+    DenyAccess('@ViewBag.Access');
+
+</script>
+
+

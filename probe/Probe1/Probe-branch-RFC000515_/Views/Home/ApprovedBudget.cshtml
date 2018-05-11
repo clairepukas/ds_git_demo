@@ -1,0 +1,94 @@
+﻿@{
+    <link href="~/Content/Probe.css?rfrsh=true" rel="stylesheet" />
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/smoothness/jquery-ui.css">
+    <script src="~/Scripts/ProbeScripts/probe.js?rfrsh=true"></script>
+}
+<style>
+.container {
+   
+    width:1450px !important;
+    margin:auto !important;
+   
+    
+}
+
+.content-wrapper {
+   
+    max-width:1550px !important;
+   
+    
+}
+    </style>
+<table style="width:1340px">
+    <tr>
+        <td class="ui-corner-all" style="width:60%;vertical-align:text-top;padding:5px">            
+            <h4>Approved Budget Details</h4><br />
+
+            <b style="margin:5px">Budget Type</b><br />            
+            <div id="Totals" class="ui-corner-all budgetSection" style="min-height:100px">
+                <br />
+                @Html.Raw(ViewBag.DynamicBudgetTotals)
+            </div>
+
+            <div id="Annuals" class="ui-corner-all budgetSection" style="min-height:100px; display:none;">
+                <b style="margin:5px">Annual Totals</b><br />
+                @Html.Raw(ViewBag.DynamicBudgetAnnualTotals)
+            </div>
+
+            <b style="margin:5px">Annual/Monthly</b>            
+            <div id="Monthlys" class="ui-corner-all budgetSection" style="min-height:250px;min-width:1400px;">
+                <br />
+                @Html.Raw(ViewBag.DynamicBudgetDetails)
+            </div>
+
+        </td>
+    </tr>
+</table>
+
+<script type="text/javascript">
+
+    function isNumberKey(evt) {
+        var charCode = (evt.which) ? evt.which : event.keyCode;
+
+        var elm = event.srcElement;
+        if (charCode == 13)
+        {
+            elm.blur();
+            elm.select();
+        }
+
+        if (charCode != 46 && charCode > 31
+          && (charCode < 48 || charCode > 57))
+            return false;
+        return true;
+    }
+
+    $('.currency').blur(function () {
+        $('.currency').formatCurrency();
+    });
+
+    $('.currency').formatCurrency();
+
+    SetBudgetAccess('@ViewBag.Access');
+
+    //This will reset the css to fix the issue with the inputs not showing all the text on dynamic load
+    $($("input[id*=CurrentBudget]")[0]).focus().blur();
+
+    var ua = window.navigator.userAgent;
+    var msie = ua.indexOf("MSIE ");
+    if (msie > 0)      // If Internet Explorer set textareas that are the Annual Labels to width of 90px else make width of 86px;
+    {
+        $(".budgetTextArea").each(function () {
+            
+            $(this).attr('disabled', false);
+            $(this).addClass("IEbudgetTextArea");
+            $(this).attr('readonly', "readonly");
+            $(this).removeClass("budgetTextArea");
+            
+        });
+    } else {                // If another browser
+
+        $(".budgetTextArea:disabled").attr("width", "86px");
+
+    }
+</script>

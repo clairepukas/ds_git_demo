@@ -1,0 +1,53 @@
+﻿table.editTable{
+    border: 1px solid black;
+    padding: 5px;
+    font-family: Arial;
+    font-size: 10pt;
+}
+
+table.editTable tr{
+    border: 1px solid black;
+}
+
+
+table.editTable th{
+    font-family:Arial; 
+    height: 20px; 
+    font-size: 9pt;
+    text-align: left;
+    color: white;
+    font-weight: bold;
+    background-color: #008099;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+    padding: 0 5px 0 5px;
+}
+
+table.editTable td{
+    /*border-left: 1px solid black;*/
+    /*border-right: 1px solid black;*/
+    padding: 5px 5px 5px 5px;
+}
+
+.altrows  tr:nth-child(even){
+
+    background-color: #c2d0d3;
+}
+
+
+
+.tblEdit td{
+    padding:10px;
+}
+
+.tblEdit input{
+    width:400px;
+    font-family:Arial;
+    font-size:10pt;
+    height:25px;
+}
+
+div{
+    margin-left:50px;
+}
+

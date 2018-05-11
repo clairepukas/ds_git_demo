@@ -1,0 +1,142 @@
+﻿body, a {
+    color: #3B4C56;
+    font-family: sans-serif;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+#pgtitle
+{
+	margin: 0px 0px 20px;
+	font-size: 18pt;
+}
+a{
+	cursor:pointer;
+}
+input
+{
+	text-align:center;
+	width:50px;
+	margin-left:20px;
+}
+div{
+    display:block;
+}
+
+
+.rsrcLnk {
+    padding-left:10px;
+    padding-right:10px;
+    font-size:.9em;
+    font-weight:bold;
+
+}
+
+
+input[type=checkbox]{
+    width:15px;
+    margin-right:5px;
+}
+
+img[id^=info]{
+    margin-left:5px;
+}
+img[id^=info]:hover{
+    cursor:pointer;
+    margin-left:5px;
+}
+
+img[id^=notes]:hover{
+    cursor:pointer;
+ 
+}
+
+
+
+#dialog-modal table input[type=button]{
+    cursor:pointer;
+    width:100px;
+}
+
+#dialog-modal table  tr td span{
+    font-weight:bold;
+}
+
+/*Resource Info Dialog form*/
+input[id^=Template]
+{
+	text-align:left;
+	width:300px;
+	margin-left:20px;
+}
+
+img[id^=addEntity_],img[id^=addRsrc_],img[id^=delEntity_]{
+    margin-left:10px;
+    cursor:pointer;
+}
+img[id^=delRsrc_] {
+        margin-right:6px;
+    cursor:pointer;
+}
+
+
+/** Resrouces Admin  **/
+.listDiv{
+    margin-top:30px;
+}
+.listDiv table tr td img{
+    cursor:pointer;
+}
+
+.btnTpltAdd{
+    border:solid 1px lightgray;
+    background:lightgray;
+    font-weight:bold;
+    padding:5px;
+    width:300px;
+    margin: 20px 0px;
+}
+
+form[id=frmTemplates] div{
+    margin:30px;
+}
+.tblTemplates{
+    border:solid 1px lightgray;
+    border-collapse:collapse;
+    max-width:1100px;
+}
+.tblTemplates th {
+    border:solid 1px lightgray;
+    padding:5px;
+}
+.tblTemplates td {
+    border:solid 1px lightgray;
+    padding:10px 5px;
+    
+}
+
+#frmTpltInfo input[type=text]
+{
+	text-align:left;
+	width:300px;
+	margin-left:20px;
+}
+
+img[id^=edittplt_],img[id^=deltplt_],img[id^=dnldtplt_]{
+    cursor:pointer;
+}
+
+
+.loader{
+    display:none;
+}
+
+.makeTop{
+        border:solid 1px black;
+    background:lightgray;
+    font-weight:bold;
+    padding:5px;
+    width:300px;
+    margin: 20px 10px;
+    font-size:.85em;
+}

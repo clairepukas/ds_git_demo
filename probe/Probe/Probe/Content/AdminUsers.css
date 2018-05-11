@@ -1,0 +1,146 @@
+﻿body, a {
+    color: #3B4C56;
+    font-family: sans-serif;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+#pgtitle
+{
+	margin: 0px 0px 20px;
+	font-size: 18pt;
+}
+a{
+	cursor:pointer;
+}
+input
+{
+	text-align:center;
+	width:50px;
+	margin-left:20px;
+}
+div{
+    display:block;
+}
+
+
+.rsrcLnk {
+    padding-left:10px;
+    padding-right:10px;
+    font-size:.9em;
+    font-weight:bold;
+
+}
+
+
+input[type=checkbox]{
+    width:15px;
+    margin-right:5px;
+}
+
+img[id^=info]{
+    margin-left:5px;
+}
+img[id^=info]:hover{
+    cursor:pointer;
+    margin-left:5px;
+}
+
+img[id^=notes]:hover{
+    cursor:pointer;
+ 
+}
+
+
+
+#dialog-modal table input[type=button]{
+    cursor:pointer;
+    width:100px;
+}
+
+#dialog-modal table  tr td span{
+    font-weight:bold;
+}
+
+
+input[id^=User]
+{
+	text-align:left;
+	width:300px;
+	margin-left:20px;
+}
+
+img[id^=delUser_],img[id^=editUser_]{
+    margin:2px;
+    cursor:pointer;
+}
+
+
+.listDiv{
+    margin-top:30px;
+}
+.listDiv table tr td img{
+    cursor:pointer;
+}
+
+.btnUserAdd{
+    border:solid 1px black;
+    background:lightgray;
+    font-weight:bold;
+    padding:5px;
+    width:300px;
+    margin: 20px 20px;
+}
+
+form[id=frmUsers] div{
+    margin:30px;
+}
+.tblUsers{
+    border:solid 1px lightgray;
+    border-collapse:collapse;
+    max-width:1200px;
+}
+.tblUsers th {
+    border:solid 1px lightgray;
+    padding:5px;
+    white-space:nowrap;
+    text-decoration:underline;
+    cursor:pointer;
+}
+.tblUsers td {
+    border:solid 1px lightgray;
+    padding:5px;
+    
+}
+.tblUsers input[type=text]
+{
+	text-align:left;
+	width:300px;
+	margin-left:20px;
+}
+
+#frmUserInfo input[type=text]
+{
+	text-align:left;
+	width:300px;
+	margin-left:20px;
+}
+
+img[id^=editUser_],img[id^=delUser_]{
+    cursor:pointer;
+}
+
+
+.loader{
+    display:none;
+}
+
+.makeTop{
+        border:solid 1px black;
+    background:lightgray;
+    font-weight:bold;
+    padding:5px;
+    width:300px;
+    margin: 20px 10px;
+    font-size:.85em;
+}

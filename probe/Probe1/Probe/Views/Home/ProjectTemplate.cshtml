@@ -1,0 +1,278 @@
+﻿@model Probe.Models.NewProj
+    @{
+        Layout = "~/Views/Shared/_SiteLayout.cshtml";
+        ViewBag.Title = "ProjectTemplate";
+      
+} 
+
+<br />
+
+<h3>Create New Project from this template</h3>
+<br />
+@if (ViewBag.hasRole)
+{
+    <form>
+        <fieldset>
+            <input id="hasRole" name="hasRole" type="hidden" value="@ViewBag.hasRole.ToString()" />
+            <table>
+                <tr>
+                    <td class="ui-corner-all" style="width:50%;height:300px;background-color:white;vertical-align:text-top; padding:5px">
+                        <div id="dataDivs">
+                            @*@Html.HiddenFor(model => model.updateBy)
+
+                                @Html.LabelFor(model => model.ProjectName, "Project Name")
+                                @Html.TextBoxFor(model => model.ProjectName, new { style = "width: 100%;maxlength:565;margin-bottom:10px;" })
+                                @{Html.ValidateFor(model => model.ProjectName);}*@
+
+                            <div style="float:left;margin-right:15px;">
+                                <div>
+                                    <label>Project Name</label>
+                                    <input style="width: 100%;width:565px;margin-bottom:10px;" id="DisplayName">
+                                </div>
+                                <div style="float:left;">
+                                    <label>Start Date</label>
+                                    <input style="width: 240px;margin-bottom:15px;" id="ProjectedStart">
+                                </div>
+                                <div style="float:right;margin-right:5px;">
+                                    <label>End Date</label>
+                                    <input style="width: 240px;margin-bottom:15px;" id="ProjectedEnd">
+                                </div>
+                                <div style="clear:both;"></div>
+                                <div style="float:left;">
+                                    <label>Project Manager</label>
+                                    @Html.DropDownListFor(model => model.Manager, Model.Users, new { style = "width: 240px;margin:5px 0px 15px 0px;" })
+                                </div>
+                                <div style="float:right;margin-right:5px;">
+                                    <label>Project Sponsor</label>
+                                    @Html.DropDownListFor(model => model.Sponsor, Model.Users, new { style = "width: 240px;margin:5px 0px 15px 0px;" })
+                                </div>
+                                <div style="clear:both;"></div>
+                                <div style="float:left;">
+                                    <label>Project Engineer</label>
+                                    @Html.DropDownListFor(model => model.Engineer, Model.Users, new { style = "width: 240px;margin:5px 0px 15px 0px;" })
+                                </div>
+                                <!--Model.ResourceList-->
+                                <div style="float:right;margin-right:5px;">
+                                    <label>Customers</label>
+                                    @Html.DropDownListFor(model => model.Customer, Model.Customers, new { style = "width: 240px;margin:5px 0px 15px 0px;" })
+                                </div>
+                                <div style="clear:both;"></div>
+                                <div style="float:left;">
+                                    <label>Group</label>
+                                    @Html.DropDownListFor(model => model.Group, Model.Groups, new { style = "width: 239px;margin:5px 0px 15px 0px;" })
+                                </div>
+                                <div style="float:right;margin-right:5px;">
+                                    <label>Project Type</label>
+                                    @Html.DropDownListFor(model => model.ProjectType, Model.ProjectTypes, new { style = "width: 239px;margin:5px 0px 15px 0px;" })
+
+
+                                </div>
+                                <div style="clear:both;"></div>
+                                <div style="float:left;">
+                                    @Html.LabelFor(model => model.Agreements, "Service Agreements")
+                                    @Html.DropDownListFor(model => model.ServiceAgreementType, Model.Agreements, new { style = "width: 239px;margin:5px 0px 15px 0px;" })
+                                    @{Html.ValidateFor(model => model.Agreements);}
+                                </div>
+                                <div style="float:right;">
+                                    <label>Budget Number</label>
+                                    @Html.TextBoxFor(model => model.BudgetNum, new { style = "width: 239px;contenteditable:false;", id = "BudgetNumber" })
+                                </div>
+                                <div style="clear:both;"></div>
+                                <div style="float:left;display:none;" id="ExpirationDiv">
+                                    @Html.LabelFor(model => model.ServiceAgreementExpDt, "Agreement Expiration")
+                                    @Html.TextBoxFor(model => model.ExpirationDate, "{0:d}", new { style = "width: 240px;margin-bottom:15px;", contenteditable = false, id = "Expiration" })
+
+                                </div>
+
+
+
+                                <!--ServiceAgreementType-->
+                                <div style="float:right;padding-top:15px;margin-right:5px;">
+                                    <input type="button" id="btnSubmit" value="Submit Project" />
+                                    <input type="reset" id="btnCancel" value="Cancel" style="width:70px" />
+                                </div>
+                                <div style="clear:both;"></div>
+                            </div>
+                            <div style="float:left;">
+                                <div>
+                                    <label>Scope</label>
+                                    <textarea id="Scope" rows="9" cols="9"></textarea>
+                                </div>
+                                <div>
+                                    <label>Comments</label>
+                                    <textarea id="Comments" rows="9" cols="9"></textarea>
+                                </div>
+                            </div>
+                            <div style="clear:both;"></div>
+
+                        </div>
+                    </td>
+
+                </tr>
+
+            </table>
+        </fieldset>
+    </form>
+        @Html.ValidationSummary(false)
+  
+
+    <div style="min-height:10px">
+        <label id="lblAddMessage" style="float:left" class="@ViewBag.MsgClass">@ViewBag.AddMessage</label>
+    </div>
+}
+<script>
+    var newModel = sessionStorage.getItem("newModel");
+    newModel = $.parseJSON(newModel);
+
+    for (item in newModel) {
+        if ($("#" + item)) {
+
+            switch (item) {
+
+                case 'Sponsor':
+
+                    $("#Sponsor").children().each(function () {
+                        if ($(this).text() == newModel[item]) {
+                            $(this).attr("selected","selected")
+                        }
+                    })
+
+                    break;
+
+                case 'Engineer':
+
+                    $("#Engineer").children().each(function () {
+                        if ($(this).text() == newModel[item]) {
+                            $(this).attr("selected", "selected")
+                        }
+                    })
+
+                    break;
+
+
+                case 'Manager':
+
+                    $("#Manager").children().each(function () {
+                        if ($(this).text() == newModel[item]) {
+                            $(this).attr("selected", "selected")
+                        }
+                    })
+
+                    break;
+
+                default:
+                    $("#" + item).val(newModel[item])
+                    break;
+
+
+            }
+
+
+        }
+
+    }
+
+
+
+
+    $("#btnSubmit").on("click", function () {
+
+
+        //proj.ProjectName, proj.BudgetNum, proj.Scope, proj.Comments, proj.Customer, proj.ProjectType, proj.StartDate, proj.EndDate, proj.updateBy, 0, 0, proj.ServiceAgreementType, proj.ExpirationDate
+
+        var trans = {};
+        $("#dataDivs :input").each(function () {
+            //alert($(this).attr("id"))
+
+
+            if ($(this).val() != "Cancel" && $(this).val() != "Submit Project") {
+                switch ($(this).attr("id")) {
+
+                    case 'BudgetNumber':
+                        trans["BudgetNum"] = $(this).val();
+                        break;
+
+                    case 'DisplayName':
+                        trans["ProjectName"] = $(this).val();
+                        break;
+
+                    case 'ProjectedStart':
+                        trans["StartDate"] = $(this).val();
+
+                        break;
+
+                    case 'ProjectedEnd':
+                        trans["EndDate"] = $(this).val();
+
+                        break;
+
+                    case 'updateBy':
+                        trans["EndDate"] = '@ViewBag.UserName';
+
+                        break;
+
+                    default:
+                        trans[$(this).attr("id")] = $(this).val();
+
+                        break;
+
+                }
+
+            }
+        })
+
+        trans.Manager_name = newModel.Manager_id
+        trans.Sponsor_name = newModel.Sponsor_id
+        trans.Engineer_name = newModel.Engineer_id
+
+
+        $.ajax({
+            url: 'NewProject_Temp',
+            type: 'POST',
+            data: trans,
+            async: false,
+            success: function (result) {
+       
+                var url = "/Probe/Home/SelectedProject/?id=" + result + "&fromList=Proposed"
+                location.href = url;
+
+            }
+            
+        })
+
+
+
+
+    })
+
+
+    $("#ServiceAgreementType").on("change", function () {
+        if ($.trim($("#ServiceAgreementType").val()) == "") {
+            $("#ExpirationDiv").css("display", "none")
+            $("#Expiration").val();
+        } else {
+            $("#ExpirationDiv").css("display", "block");
+        }
+    })
+
+    $("#Expiration").datepicker({
+        defaultDate: "+1w",
+        changeMonth: true,
+        numberOfMonths: 3,
+        onClose: function (selectedDate) {
+            $("#Expiration").datepicker("option", "minDate", selectedDate);
+        }
+    });
+
+    $("#Expiration").val("");
+
+    $("#btnCancel").on("click", function () {
+        var url = "/Probe/Home/";
+        location.href = url;
+    }).on("mouseover", function () {
+        $(this).css({"text-decoration":"underline","cursor":"pointer"})
+    }).on("mouseout", function () {
+        $(this).css("text-decoration", "none")
+    })
+</script>
+

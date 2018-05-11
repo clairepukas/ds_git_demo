@@ -1,0 +1,645 @@
+﻿@model Probe.Models.ProjectInfo
+
+
+@{
+   
+    try
+    {
+        //Get selected proj
+        var db = WebMatrix.Data.Database.Open("probedb");
+
+
+        //Get Contributors
+        var contributors = db.Query(@"Select b.DisplayName,
+	                                           b.UserName,
+                                               b.UserId,
+	                                           a.createDt
+                                        FROM  ProjectUserRoles a
+                                        join Users b
+                                        on a.UserId = b.UserId
+                                        where ProjectId = @0
+                                        and b.Active = 1
+                                        and ProjectRole = 'Contributor'", Model.ProjectId);
+
+               
+        <div style="background-color:beige; width:100%;display:inline-block;">
+            <input type="button" class="btnApprove" id="btnDeleteProject" value="Delete Project" onclick="DeleteProject();" style="color:red;float:right;width:auto;" />
+            <span style="font-size: 13pt;font-weight:500;float:left;height:35px; line-height:35px;">Project Information</span>
+        </div>
+        using (Html.BeginForm("UpdateProjectInfo", "Home", FormMethod.Post, new { id = "projectInfoForm" }))
+        {
+            <table class="projInfoTable">
+                <tr>
+                    <td colspan="2">
+                        @Html.HiddenFor(model => model.ProjectId)
+                        @Html.LabelFor(model => model.DisplayName)
+                        @Html.TextBoxFor(model => model.DisplayName, ViewBag.DisplayNameDisabled ? (object)new { disabled = "disabled", style = "width: 440px;" } : new { style = "width: 365px;maxlength:355;", onChange = "fieldChanged(DisplayName);" })
+                        @{Html.ValidateFor(model => model.DisplayName);}
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ProjectNumber)
+                        @Html.TextBoxFor(model => model.ProjectNumber, new { disabled = "disabled", style = "width: 150px;border:0;" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.BudgetNum)
+                        @Html.TextBoxFor(model => model.BudgetNum, ViewBag.BudgetNumDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { style = "width: 150px;", onChange = "fieldChanged(BudgetNum);" })
+                        @{Html.ValidateFor(model => model.BudgetNum);}
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ProjectType)
+                        @Html.DropDownListFor(model => model.ProjectType, Model.BudgetTypeList, ViewBag.ProjectTypeDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { style = "width: 150px;", onChange = "fieldChanged(ProjectType);" })
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        @Html.LabelFor(model => model.Manager,"Project Manager")
+                        @Html.DropDownListFor(model => model.Manager, Model.ManagerList, ViewBag.ManagerDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { style = "width: 150px;", onChange = "fieldChanged(Manager);" })
+                        @{Html.ValidateFor(model => model.Manager);}
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.Sponsor)
+                        @Html.DropDownListFor(model => model.Sponsor, Model.SponsorList, ViewBag.SponsorDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { style = "width: 150px;", onChange = "fieldChanged(Sponsor);" })
+                        @{Html.ValidateFor(model => model.Sponsor);}
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.Engineer)
+                        @Html.DropDownListFor(model => model.Engineer, Model.EngineerList, ViewBag.EngineerDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { style = "width: 150px;", onChange = "fieldChanged(Engineer);" })
+                        @{Html.ValidateFor(model => model.Engineer);}
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.Creator)
+                        @Html.TextBoxFor(model => model.Creator, new { disabled = "disabled", style = "width: 150px;border:0;" })
+                    </td>
+                    @if(ViewBag.construction=="false"){
+                        <td>
+                        @Html.LabelFor(model => model.warrantyAgreement)
+                        @Html.DropDownListFor(model => model.warrantyAgreement, Model.warrantyAgreementTypes, ViewBag.EngineerDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { style = "width: 150px;", onChange = "updateFields(this);" })
+                        @Html.LabelFor(model => model.warrantyAgreementDate)
+                        @Html.TextBoxFor(model => model.warrantyAgreementDate, ViewBag.DisplayNameDisabled ? (object)new { disabled = "disabled", style = "width: 440px;" } : new { style = "width: 140px;maxlength:355;", onChange = "updateFields(this);" })
+                    </td>
+                    }
+                </tr>
+                <tr>
+                    <td colspan="5">
+                        @Html.LabelFor(model => model.Scope)
+                        @Html.TextAreaFor(model => model.Scope, ViewBag.ScopeDisabled ? (object)new { disabled = "disabled", rows = 4, style = "width: 1250px;" } : new { rows = 4, style = "width: 1250px;", onChange = "fieldChanged(Scope);" })
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        @Html.LabelFor(model => model.ProposedStart)
+                        @Html.TextBoxFor(model => model.ProposedStart, "{0:MM/dd/yyyy}", ViewBag.ProposedStartDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { style = "width: 150px;", onChange = "fieldChanged(ProposedStart);" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ProposedEnd)
+                        @Html.TextBoxFor(model => model.ProposedEnd, "{0:MM/dd/yyyy}", ViewBag.ProposedEndDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { style = "width: 150px;", onChange = "fieldChanged(ProposedEnd);" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.Customer)
+                        @Html.DropDownListFor(model => model.Customer, Model.CustomerList, ViewBag.CustomerDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { style = "width: 150px;", onChange = "fieldChanged(Customer);" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ApprovalStatus)
+                        @Html.TextBoxFor(model => model.ApprovalStatus, new { disabled = "disabled", style = "width: 150px;border:0" })
+                    </td>
+                    <td style="padding-top: 10px;">
+                        <input type="button" id="btnApprove" class="btnApprove" name="Approve Project" value="Approve" onclick="approveProject(ApprovalStatus);" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        @Html.LabelFor(model => model.ProjectBudgets.ProposedTotal)
+                        @Html.TextBoxFor(model => model.ProjectBudgets.ProposedTotal, "{0:C}", new { disabled = "disabled", style = "width: 150px;border:0;" })
+                    </td>
+                    <td></td>
+                    <td></td>
+                    <td>
+                        @Html.LabelFor(model => model.ActivityStatus)
+                        @Html.DropDownListFor(model => model.ActivityStatus, Model.ActivityStatusList, ViewBag.ActivityStatusDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { style = "width: 150px;", onChange = "fieldChanged(ActivityStatus);" })
+                    </td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>
+                        @Html.LabelFor(model => model.ProjectBudgets.ProposedCapital)
+                        @Html.TextBoxFor(model => model.ProjectBudgets.ProposedCapital, "{0:C}", new { disabled = "disabled", style = "width: 150px;border:0;" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ProjectBudgets.ProposedExpense)
+                        @Html.TextBoxFor(model => model.ProjectBudgets.ProposedExpense, "{0:C}", new { disabled = "disabled", style = "width: 150px;border:0;" })   
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ProjectBudgets.ProposedExpenseEP)
+                        @Html.TextBoxFor(model => model.ProjectBudgets.ProposedExpenseEP, "{0:C}", new { disabled = "disabled", style = "width: 150px;border:0;" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.Priority)
+                        @Html.CheckBoxFor(model => model.Priority, ViewBag.PriorityDisabled ? (object)new { disabled = "disabled" } : new { id = "Priority" })
+                    </td>
+                </tr>
+                <tr>                    
+                    <td colspan="5">
+                        @Html.LabelFor(model => model.Comments)
+                        @Html.TextAreaFor(model => model.Comments, ViewBag.CommentsDisabled ? (object)new { disabled = "disabled", rows = 4, style = "width: 1250px;" } : new { rows = 4, style = "width: 1250px;", onChange = "fieldChanged(Comments);" })
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="5">
+                        @Html.LabelFor(model => model.ProjectGroup)
+                        @Html.DropDownListFor(model => model.ProjectGroup.GroupId, Model.GroupList, ViewBag.GroupsDisabled ? (object)new { disabled = "disabled", style = "width: 1250px;" } : new { id = "ProjectGroup", style = "width: 1250px;", onChange = "checkGroup(this);" })
+                    </td>
+                </tr>
+
+                @if(ViewBag.construction=="false"){<tr>
+                    <td colspan="5">
+                        <div style="padding:3px;">
+                            <label>Assigned Groups</label>
+                        </div>
+                        <textarea rows=4 style="width: 1250px;">
+                          @{
+                              foreach(var t in Model.projectGroups){
+                                  <div>@t.GroupId</div>
+                              }
+                          }
+                        </textarea>
+                    </td>
+                </tr>}
+            </table><br />
+        }
+        <script>
+    $(function () {
+        $("#ProposedStart").datepicker({
+            defaultDate: "+1w",
+            changeMonth: true,
+            numberOfMonths: 3,
+            onClose: function (selectedDate) {
+                $("#ProposedEnd").datepicker("option", "minDate", selectedDate);
+            }
+        });
+        $("#ProposedEnd").datepicker({
+            defaultDate: "+1w",
+            changeMonth: true,
+            numberOfMonths: 3,
+            onClose: function (selectedDate) {
+                $("#ProposedStart").datepicker("option", "maxDate", selectedDate);
+            }
+        });
+    });
+
+    $(function (){
+        $('#Priority').click(function(event){
+            fieldChanged(this);
+        });
+    });
+
+    function fieldChanged(field){
+
+        $.ajax({
+            url: '@Url.Action("UpdateProjectInfo","Home")',
+            type: "POST",
+            data: $("#projectInfoForm").serialize() + "&changedField=" + field.id,
+            async: false
+            //dataType: "json"
+        }).success(function( model ) {
+            if(field.id == 'DisplayName'){
+                location.reload();
+            }
+        }).error(function (msg) {
+            alert("There was an error while making update.");;
+        });
+    }
+
+    function updateFields(obj){
+              
+        var str= "/Probe/Home/UpdateProjectData";
+        var id=$(obj).attr("id");
+        
+        var model={};
+        model[id]=$(obj).val();
+
+        model.ProjectId=@ViewBag.pid;
+        model.warrantyAgreementDate=$("#warrantyAgreementDate").val();
+        switch(id){
+            case 'warrantyAgreement':
+                
+               
+                if($(obj).val()=="" || $(obj).val()=="Unknown"){
+                    model.warrantyAgreementDate=null;
+                    model.warrantyAgreement=null;
+                    $("#warrantyAgreementDate").val("");
+                }
+                break;
+
+            case 'warrantyAgreementDate':
+                model.dbase="Projects";
+                model.warrantyAgreement=$("#warrantyAgreement").val();
+                break;
+        }
+
+        $.ajax({
+            url: str,
+            type: "POST",
+            data: model,
+            async: false
+            //dataType: "json"
+        }).success(function(data) {
+
+        }).error(function (msg) {
+            alert("There was an error while making update.");;
+        });
+        console.log(8787)
+        console.log(model)
+        console.log(8787)
+    }
+
+
+    function checkGroup(obj){
+        alert($(this).val())
+    }
+
+    function approveProject(field){
+        $("#dialog-message").dialog({
+            resizable: false,
+            width: 375,
+            modal: true,
+            buttons: {
+                "Yes": function () {
+                    $.ajax({
+                        url: '@Url.Action("UpdateProjectInfo","Home")',
+                        type: "POST",
+                        data: $("#projectInfoForm").serialize() + "&changedField=" + field.id,
+                        async: false
+                        //dataType: "json"
+                    })
+                    .success(function( model ) {
+                        window.location.href = '@Url.Action("SelectedProject", "Home", new { id = Model.ProjectId })';
+                    })
+                    .error(function (msg) {
+                        alert("There was an error while making approving the project.");;
+                    });
+                },
+                "No": function () {
+                    $(this).dialog("close");
+                }
+            }
+        });
+
+        $('#dialog-message').dialog('option', 'title', 'Approve Project');
+        document.getElementById('dialog-message').innerHTML =   "<p><span class='ui-icon ui-icon-alert' style='float:left; margin:0 7px 20px 0;'></span>Are you sure you want to approve this project?</p>"
+
+    }
+
+    function DeleteProject() {
+        $("#dialog-message").dialog({
+            resizable: false,
+            width: 375,
+            modal: true,
+            buttons: {
+                "Yes": function () {
+                    var myData = {projectId: @Model.ProjectId};
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("deleteProject", "Home")',
+                        data: myData,
+                        async: false
+                    })
+                            .success(function (msg) {
+                                $('#dialog-message').dialog("close");
+                                window.location.href = '@Url.Action("Default", "Home")';
+                            })
+                            .fail(function (msg) {
+                                alert("There was an error while deleting.");
+                                $('#dialog-message').dialog("close");
+                            });
+                },
+                "No": function () {
+                    $(this).dialog("close");
+                }
+            }
+        });
+
+        $('#dialog-message').dialog('option', 'title', 'Delete Project');
+        document.getElementById('dialog-message').innerHTML =   "<p><span class='ui-icon ui-icon-alert' style='float:left; margin:0 7px 20px 0;'></span>Are you sure you want to delete this project?</p>"
+
+    }
+    </script>
+
+        <div id="dialog-message"></div>
+
+        @* Attachments Section *@
+          <div class="ui-corner-all table-div-100">
+
+            <table>
+                <tr>
+                    <td><label class="label">Attachments</label>&nbsp;<img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="toggleUploadDiv();" /></td>
+
+                </tr>
+                <tr>
+                    @*<td style="vertical-align:text-top;"><table><tr><td style="text-align:center;"><label class="label">Attachments</label></td></tr><tr><td style="text-align:center;"><img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="toggleUploadDiv();" /></td></tr></table></td>*@
+
+                    <td>
+                        <div class="ui-corner-all" style="max-height:150px;width:auto;overflow-y:auto;overflow-x:hidden;">
+                            <div id="uploadDiv" style="display:none;">
+                                @using (@Html.BeginForm("addAttachment", "Home", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                                {
+                                    <fieldset>
+                                        <input type="hidden" name="projectId" id="projectId" value="@Model.ProjectId" />
+                                        <input type="file" name="uploadFile" id="uploadFile" />
+                                        <input type="submit" name="uploadBtn" value="Upload" id="uploadBtn" />
+                                    </fieldset>
+                                }
+                            </div>
+                            <table class="projInfoUpdateTable">
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th>Date Created</th>
+                                    <th>Title</th>
+                                    <th>File Type</th>
+                                </tr>
+                                @{
+            if (Model.ProjectAttachments.Count() > 0)
+            {
+                foreach (var doc in Model.ProjectAttachments)
+                {
+                    <tr>
+                        <td><img src='~/Images/delete.png' alt='Delete' class='btnDelete' style="cursor:pointer;" onclick="DeleteAttachment('@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(doc.ProjectAttachmentId)))')" /></td>
+                        <td>@Html.ActionLink("View", "viewAttachment", "Home", new { attachmentId = doc.ProjectAttachmentId }, new { @class = "imageButton" })</td>
+                        @*<td><img src='~/Images/zoom.png' alt='View' class='btnView' style="cursor:pointer;" onclick="ViewAttachment('@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(doc.ProjectAttachmentId)))');" /></td>*@
+                        <td><div class="updates" style="width:110px;" id="attachmentCreateDate">@doc.createdDt</div></td>
+                        <td><div class="updates" style="width:620px;" id="attachmentTitle">@doc.AttachmentTitle</div></td>
+                        <td><div class="updates" style="width:100px;">@doc.FileType</div></td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td><img src='~/Images/delete.png' alt='Delete' class='btnDelete' /></td>
+                    <td><img src='~/Images/zoom.png' alt='View' class='btnView' /></td>
+                    <td><div class="updates" style="width:110px;" id="attachmentCreateDate"></div></td>
+                    <td><div class="updates" style="width:620px;" id="attachmentTitle"></div></td>
+                    <td><div class="updates" style="width:100px;"></div></td>
+                </tr>
+            }
+                                }
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+            <script type="text/javascript">
+
+                $(document).ready(function(){
+                    var btn = document.getElementById('uploadBtn');
+                    var fUpload = document.getElementById('uploadFile');
+
+                    btn.disabled = true;
+                    $('#uploadFile').change(
+                        function(){
+                            if ($(this).val()){
+                                btn.disabled = false; 
+                            }
+                            else {
+                                btn.disabled = true;
+                            }
+                        })              
+                });
+
+                function toggleUploadDiv(){
+                    $('#uploadDiv').toggle('show');
+                }
+
+                //Delete Attachment
+                function DeleteAttachment(id) {
+                    $("#dialog-message").dialog({
+                        resizable: false,
+                        width: 375,
+                        modal: true,
+                        buttons: {
+                            "Yes": function () {
+                                var myData = {projId: @Model.ProjectId, attachmentId: id };
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '@Url.Action("deleteAttachment", "Home")',
+                                    data: myData,
+                                    async: false
+                                })
+                                    .success(function (msg) {
+                                        $('#dialog-message').dialog("close");
+                                        location.reload();
+                                    })
+                                    .fail(function (msg) {
+                                        alert("There was an error while deleting.");
+                                        $('#dialog-message').dialog("close");
+                                    });
+                            },
+                            "No": function () {
+                                $(this).dialog("close");
+                            }
+                        }
+                    });
+
+                    $('#dialog-message').dialog('option', 'title', 'Delete Project Attachment');
+                    document.getElementById('dialog-message').innerHTML =   "<p><span class='ui-icon ui-icon-alert' style='float:left; margin:0 7px 20px 0;'></span>Are you sure you want to delete this attachment?</p>"
+
+                }
+
+            </script>
+        </div>
+            @* End Attachments Section*@
+
+        @*Contributors Section*@
+    <div id="contributors" class="ui-corner-all table-div-100">
+
+        <table>
+            <tr>
+                <td style="vertical-align:central;"><label class="label">Contributors</label>&nbsp;<img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="AddContributor();" /></td>
+
+            </tr>
+            <tr>
+                @*<td style="vertical-align:text-top;"><table><tr><td style="text-align:center;"><label class="label">Contributors</label></td></tr><tr><td style="text-align:center;"><img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="AddContributor();" /></td></tr></table></td>*@
+                <td style="width:auto;">
+                    <div class="ui-corner-all" style="max-height:150px;width:400px;overflow-y:auto;overflow-x:hidden;">
+                        <table class="projInfoUpdateTable">
+                            <tr>
+                                <th id="delePngHeader"></th>
+                                <th>Date Created</th>
+                                <th>Contributor</th>
+                            </tr>
+                            @{
+        if (contributors.Count() > 0)
+        {
+            foreach (var x in contributors)
+            {
+                <tr>
+                    <td id="delePng"><img src='~/Images/delete.png' alt='Delete' class='btnDelete' style="cursor:pointer;" onclick="DeleteContributor('@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(x.UserId)))');" /></td>
+                    <td><div class="updates" style="width:130px;" id="CreateDt">@x.createDt</div></td>
+                    <td><div class="updates" style="width:180px;">@x.DisplayName</div></td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td id="delePng"><img src='~/Images/delete.png' alt='Delete' class='btnDelete' /></td>
+                <td><div class="updates" style="width:130px;" id="CreateDt"></div></td>
+                <td><div class="updates" style="width:180px;"></div></td>
+            </tr>
+        }
+                            }
+                        </table>
+
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <script type="text/javascript">
+
+            //Handles the add click on the updates section
+            function AddContributor() {
+                $(function () {
+                    $("#dialog-message").dialog({
+                        width: 500,
+                        modal: true,
+                        buttons: {
+                            "Add Contributor": function () {
+                                var cont = document.getElementById("listOfUsers").value;
+                                var myData = {projectId: @Model.ProjectId, uname: cont };
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '@Url.Action("addContributor", "Home")',
+                                    data: myData,
+                                    async: false
+                                })
+                                    .success(function (msg) {
+                                        alert("Contributor added successfully.");
+                                        $('#dialog-message').dialog("close");
+                                        location.reload();
+                                    })
+                                    .fail(function (msg) {
+                                        alert("There was an error while adding contributor.");
+                                        $('#dialog-message').dialog("close");
+                                    });
+                            },
+                            Cancel: function () {
+                                $(this).dialog("close");
+                            }
+                        },
+                        open: function (event, ui) {
+                            $('#dialog-message').dialog('option', 'title', 'Add Project Contributor');
+                            document.getElementById('dialog-message').innerHTML = "<form id='addContributorForm'><fieldset><input type='hidden' id='projectId' value='" + @Model.ProjectId +
+                                                                                            "'/><table><tr><td>Project</td><td><center>" + '@Model.ProjectName' +
+                                                                                            "</center></td></tr><tr><td>Select a Contributor</td><td><center>" +
+                                                                                            "<select id='listOfUsers' >" +
+                                                                                            "</center></td></tr>" +
+                                                                                            "<tr><td><input type='submit' tabindex='-1' style='position:absolute; top:-1000px'></td></tr></table></fieldset></form>";
+
+
+
+                            var userList = @Html.Raw(Json.Encode(Model.ContributorList));
+                            $.each(userList, function (i, o) {
+                                var id = o.Value;
+                                var txt = o.Text;
+
+                                if(txt == "null")
+                                    txt = id;
+
+                                if(id != null){
+                                    $('#listOfUsers').append('<option value="' +id+'">' + txt + '</option>');
+                                }
+
+                            });
+                        }
+
+                    });
+                });
+
+
+            }
+
+            //Delete Contributor
+            function DeleteContributor(id) {
+                $("#dialog-message").dialog({
+                    resizable: false,
+                    width: 375,
+                    modal: true,
+                    buttons: {
+                        "Yes": function () {
+                            var myData = {projectId: @Model.ProjectId, contributorId: id };
+                            $.ajax({
+                                type: 'POST',
+                                url: '@Url.Action("deleteContributor", "Home")',
+                                data: myData,
+                                async: false
+                            })
+                                .success(function (msg) {
+                                    $('#dialog-message').dialog("close");
+                                    location.reload();
+                                })
+                                .fail(function (msg) {
+                                    alert("There was an error while deleting.");
+                                    $('#dialog-message').dialog("close");
+                                });
+                        },
+                        "No": function () {
+                            $(this).dialog("close");
+                        }
+                    }
+                });
+
+                $('#dialog-message').dialog('option', 'title', 'Delete Project Contributor');
+                document.getElementById('dialog-message').innerHTML =   "<p><span class='ui-icon ui-icon-alert' style='float:left; margin:0 7px 20px 0;'></span>Are you sure you want to delete this contributor?</p>"
+
+            }
+
+        </script>
+    </div>
+        @*End Contributors Section*@
+
+        <script>
+    $(document).ready(function () {
+        if(@ViewBag.CrudDisabled == true)
+        {
+            if(@ViewBag.HideContributors == true){
+                //$("#contributors").hide();
+                $("#delePng").empty();
+            }
+            $(".btnAdd").hide();
+            $(".btnEdit").prop('disabled', true);
+            $(".btnDelete").prop('disabled', true);
+
+        }
+
+        if(@ViewBag.ApproveBtnDisabled == true)
+            {
+                $("#btnApprove").prop('disabled', true);
+                
+            }
+            if(@ViewBag.DeleteBtnDisabled == true)
+            {                
+                $("#btnDeleteProject").prop('disabled', true);
+            }
+
+
+
+        $("#warrantyAgreementDate").datepicker({
+            defaultDate: "+1w",
+            changeMonth: true,
+            numberOfMonths: 3,
+            onClose: function (selectedDate) {
+                $("#Expiration").datepicker("option", "minDate", selectedDate);
+            }
+        });
+
+        });
+        </script>
+
+    }
+    catch (Exception ex)
+    {
+        <h3>@ex.Message</h3>
+    }
+}

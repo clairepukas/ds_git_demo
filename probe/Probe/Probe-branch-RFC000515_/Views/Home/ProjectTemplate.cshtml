@@ -1,0 +1,114 @@
+﻿@model Probe.Models.NewProj
+    @{
+    Layout = "~/Views/Shared/_SiteLayout.cshtml";
+    ViewBag.Title = "ProjectTemplate";
+
+} 
+
+<br />
+
+<h3>Create New Project from this template</h3>
+<br />
+@if (ViewBag.hasRole)
+{
+    using (Html.BeginForm())
+    {
+        <fieldset>
+            <input id="hasRole" name="hasRole" type="hidden" value="@ViewBag.hasRole.ToString()" />
+            <table>
+                <tr>
+                    <td class="ui-corner-all" style="width:50%;height:300px;background-color:white;vertical-align:text-top; padding:5px">
+
+                        @*@Html.HiddenFor(model => model.updateBy)
+
+            @Html.LabelFor(model => model.ProjectName, "Project Name")
+            @Html.TextBoxFor(model => model.ProjectName, new { style = "width: 100%;maxlength:565;margin-bottom:10px;" })
+            @{Html.ValidateFor(model => model.ProjectName);}*@
+                        
+                        <div style="float:left;">
+                            <div style="margin-right:5px;">
+                                <label>Project Name</label>
+                                <input style="width: 100%;width:565px;margin-bottom:10px;" id="DisplayName">
+                            </div>
+                            <div style="float:left;">
+                                <label>Start Date</label>
+                                <input style="width: 240px;margin-bottom:15px;" id="ProjectedStart">
+                            </div>
+                            <div style="float:right;margin-right:5px;">
+                                <label>End Date</label>
+                                <input style="width: 240px;margin-bottom:15px;" id="ProjectedEnd">
+                            </div>
+                            <div style="clear:both;"></div>
+                            <div style="float:left;">
+                                <label>Project Manager</label>
+                                @Html.DropDownListFor(model => model.Manager, Model.Users, new { style = "width: 240px;margin:5px 0px 15px 0px;" })
+                            </div>
+                            <div style="float:right;margin-right:5px;">
+                                <label>Project Sponsor</label>
+                                @Html.DropDownListFor(model => model.Sponsor, Model.Users, new { style = "width: 240px;margin:5px 0px 15px 0px;" })
+                            </div>
+                            <div style="clear:both;"></div>
+                            <div style="float:left;">
+                                <label>Project Engineer</label>
+                                @Html.DropDownListFor(model => model.Engineer, Model.Users, new { style = "width: 240px;margin:5px 0px 15px 0px;" })
+                            </div>
+                            <div style="float:right;margin-right:5px;">
+                                <label>Customers</label>
+                                @Html.DropDownListFor(model => model.Customer, Model.Customers, new { style = "width: 240px;margin:5px 0px 15px 0px;" })
+                            </div>
+                            <div style="clear:both;"></div>
+                            <div style="float:left;">
+                                <label>Group</label>
+                                @Html.DropDownListFor(model => model.Group, Model.Groups, new { style = "width: 239px;margin:5px 0px 15px 0px;" })
+                            </div>
+                            <div style="float:right;margin-right:5px;">
+                                <label>Project Type</label>
+                                @Html.DropDownListFor(model => model.ProjectType, Model.ProjectTypes, new { style = "width: 239px;margin:5px 0px 15px 0px;" })
+                            </div>
+                            <div style="clear:both;"></div>
+                            <div style="float:left;">
+                                <label>Budget Number</label>
+                                @Html.TextBoxFor(model => model.BudgetNum, new { style = "width: 239px;contenteditable:false;", id = "From" })
+                            </div>
+                            <div style="float:right;padding-top:15px;margin-right:5px;">
+                                <input type="submit" id="btnSubmit" value="Submit Project" />
+                                <input type="reset" id="btnCancel" value="Cancel" style="width:70px" />
+                            </div>
+                            <div style="clear:both;"></div>
+                        </div>
+                        <div style="float:left;">
+                            <div>
+                                <label>Scope</label>
+                                <textarea rows="9" cols="9"></textarea>
+                            </div>
+                            <div>
+                                <label>Comments</label>
+                                <textarea rows="9" cols="9"></textarea>
+                            </div>
+                        </div>
+                        <div style="clear:both;"></div>
+                    </td>
+
+                </tr>
+
+            </table>
+        </fieldset>
+        @Html.ValidationSummary(false)
+    }
+
+    <div style="min-height:10px">
+        <label id="lblAddMessage" style="float:left" class="@ViewBag.MsgClass">@ViewBag.AddMessage</label>
+    </div>
+}
+<script>
+    var newModel = sessionStorage.getItem("newModel");
+    newModel = $.parseJSON(newModel);
+
+    for (item in newModel) {
+        if ($("#" + item)) {
+            $("#" + item).val(newModel[item])
+        }
+        
+    }
+</script>
+

@@ -1,0 +1,57 @@
+﻿@{
+    <link href="~/Content/Probe.css?rfrsh=true" rel="stylesheet" />
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/smoothness/jquery-ui.css">
+    <script src="~/Scripts/ProbeScripts/probe.js?rfrsh=true"></script>
+}
+<table style="width:100%">
+    <tr>
+        <td class="ui-corner-all" style="width:60%;vertical-align:text-top;padding:5px">
+            <h4>Proposed Budget Details</h4></br>
+
+            <b style="margin:5px">Budget Type</b><br />
+            <div id="Totals" class="ui-corner-all budgetSection" style="min-height:100px"> 
+                <br />               
+                @Html.Raw(ViewBag.DynamicBudgetTotals)
+            </div>
+
+            <div id="Annuals" class="ui-corner-all budgetSection" style="min-height:100px; display:none;">
+                <b style="margin:5px">Annual Totals</b><br />
+                @Html.Raw(ViewBag.DynamicBudgetAnnualTotals)
+            </div>
+
+            <b style="margin:5px">Annual/Monthly</b>
+            <div id="Monthlys" class="ui-corner-all budgetSection" style="min-height:250px">
+                <br />                
+                @Html.Raw(ViewBag.DynamicBudgetDetails)
+            </div>
+
+        </td>
+    </tr>
+</table>
+>
+<script type="text/javascript">
+    $("#templateButton").hide();
+    function isNumberKey(evt) {
+        var charCode = (evt.which) ? evt.which : event.keyCode;
+
+        var elm = event.srcElement;
+        if (charCode == 13) {
+            elm.blur();
+            elm.select();
+        }
+
+        if (charCode != 46 && charCode > 31
+          && (charCode < 48 || charCode > 57))
+            return false;
+        return true;
+    }
+
+    $('.currency').blur(function () {
+        $('.currency').formatCurrency();
+    });
+
+    $('.currency').formatCurrency();
+
+    SetProposedBudgetAccess('@ViewBag.Access');
+
+</script>

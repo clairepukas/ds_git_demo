@@ -1,0 +1,654 @@
+﻿@using Probe.Models;
+
+@{
+
+    //Layout = "~/Views/Shared/_SiteLayout.cshtml";
+    //get phases data
+    string ProjectId = ViewBag.CurrProjId; //Session["CurrProjectId"].ToString();
+    bool hasEdit = (bool) ViewBag.HasEdit;
+    var usr = (ProbeUser)Session["CurrProbeUser"];
+
+    var db = Database.Open("probedb");
+    var projectrange = db.Query(@"select MIN(p.ProjectId) as lowest, MAX(p.ProjectId) as highest from Projects p");
+
+    var lowest = projectrange.FirstOrDefault().lowest;
+    var highest = projectrange.FirstOrDefault().highest;
+
+
+    var projectPctTot = db.Query(@"select pct_complete from Projects where ProjectId=" + ProjectId);
+
+    var totpct = projectPctTot.FirstOrDefault().pct_complete;
+
+    var projectData = db.Query(@"select
+                                        p.ProjectId,
+	                                         p.ProjectName,
+		                                        p.ProposedStart,
+		                                        p.ProposedEnd,
+		                                        p.ProjectedStart,
+		                                        p.ProjectedEnd,
+		                                        p.ActualStart,
+		                                        p.ActualEnd,
+                                                p.ApprovalStatus
+		                                        from Projects p
+		                                        where p.ProjectId=" + ProjectId);
+
+
+    var projName = ViewBag.ProjectName;
+    var actStart = projectData.FirstOrDefault().ActualStart;
+    var actEnd = projectData.FirstOrDefault().ActualEnd;
+    var projStart = projectData.FirstOrDefault().ProjectedStart;
+    var projEnd = projectData.FirstOrDefault().ProjectedEnd;
+    var propStart = projectData.FirstOrDefault().ProposedStart;
+    var propEnd = projectData.FirstOrDefault().ProposedEnd;
+
+
+    var approvalstatus = projectData.FirstOrDefault().ApprovalStatus;
+    var schedStart = projectData.FirstOrDefault().ProposedStart;
+    var schedEnd = projectData.FirstOrDefault().ProposedEnd;
+
+    ResourcesData rdata = new ResourcesData();
+    schedStart = rdata.getProjectStart(int.Parse(ProjectId));
+    schedEnd = rdata.getProjectEnd(int.Parse(ProjectId));
+
+    //,isnull((select ph.Color from Phases ph where ph.PhaseId = p.PhaseId),'green') as Color
+
+    var phaseData = db.Query(@"SELECT (select ph.PhaseName from Phases ph where ph.PhaseId = p.PhaseId) as PhaseName
+                                          ,(select ph.Color from Phases ph where ph.PhaseId = p.PhaseId) as color
+                                          ,(select ph.weeks_duration from Phases ph where ph.PhaseId = p.PhaseId) as duration
+                                          ,[StartDate]
+                                          ,[PhaseId]
+                                          ,[EndDate]
+                                          ,[pct_complete]
+                                          ,[IsCurrent]
+                                      FROM [dbo].[ProjectPhases] p
+                                      where ProjectId =" + ProjectId);
+
+    var zoomfactor = 20;
+    var timespan = 30;
+
+    if (Request["zoom"] != null)
+    {
+        zoomfactor = int.Parse(Request["zoom"]);
+
+    }
+    if (Request["timespan"] != null)
+    {
+        timespan = int.Parse(Request["timespan"]);
+
+    }
+
+    string qString = "select * from ProjectPhaseTasks where ProjectId=" + ViewBag.CurrProjId;
+    var phaseTasks = db.Query(qString);
+}
+<!DOCTYPE html/>
+<script src="~/Scripts/TweenMax.min.js"></script>
+
+<head>
+    <title>Schedule Details</title>
+    <link href="~/Content/themes/base/all.css?rfrsh=true" rel="stylesheet" type="text/css" />
+
+    @*<link href="~/Content/themes/cupertino/jquery-ui-1.10.3.custom.css" rel="stylesheet" type="text/css">*@
+
+   
+    <link href="~/Content/Probe.css?rfrsh=true" rel="stylesheet" />
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/smoothness/jquery-ui.css">
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    <script src="~/Scripts/jquery-2.1.3.js"></script>
+    <script src="~/Scripts/jquery-ui-1.11.2.js"></script>
+
+    <script src="~/Scripts/modernizr-2.6.2.js"></script>
+    <script src="~/Scripts/ProbeScripts/probe.js?rfrsh=true"></script>
+    <script src="~/Scripts/ProbeScripts/Schedules.js?rfrsh=true"></script>
+    <meta name="viewport" content="width=device-width" />
+    <style>
+        .schedDateInput
+        {            
+            width:75px;        
+            border:none;
+            font-weight:bold;    
+            color:blue;
+        }
+         .dpicker
+        {            
+            max-width:125px;            
+        }
+         td{
+             font-weight:bold;
+             padding-right:3px;
+         }
+
+         .task_even{
+             background-color:#fafafa;
+             border-bottom:solid 1px #fff;
+             padding-left:2px;
+             padding-right:2px;
+         }
+
+
+         .task_odd{
+             background-color:#f3f3f3;
+             border-bottom:solid 1px #fff;
+             padding-left:2px;
+             padding-right:2px;
+         }
+
+
+         .deleteTaskX{
+             display:inline-block;
+             vertical-align:top;
+             color:red;
+             margin-left:15px;
+             font-weight:bold;
+             cursor:pointer;
+         }
+
+
+         .tasktitleStyle{
+             display:inline-block;
+             width:290px;
+             padding:3px;
+             margin-right:5px;
+             text-decoration:underline;
+             cursor:pointer;
+         }
+    </style>
+    <script type="text/javascript">
+        var phaseTasksObj = {};
+        phaseTasksObj.tasks=[];
+
+    </script>
+</head>
+<body>
+    <!--Schedule Details -->
+    <form id="phaseForm" method="post">
+        <input type="hidden" id="editfld" name="editfld" value="" />
+        <div>
+
+            <input id="projId" name="projId" type="hidden" value="@ProjectId" />
+
+        </div>
+
+
+        <input id="zoom" name="zoom" type="hidden" value="@zoomfactor" />
+
+
+        <h2>Project Schedule</h2><h3>@projName</h3>
+
+        <br />
+        <table class="tblScheds" cellpadding="3" style="text-align:left;width:700px">
+            <tr>
+                <td>Proposed Start:</td>
+                <td><input   style="width: 75px; border: none; font-weight: bold; color: blue;" type="text" disabled value="@(propStart != null?(propStart.Year<2000?"":propStart.ToShortDateString()):"")" /></td>
+                <td>Proposed End:</td>
+                <td><input style="width: 75px; border: none; font-weight: bold; color: blue;" type="text" disabled value="@(propEnd!=null?(propEnd.Year<2000?"":propEnd.ToShortDateString()):"")" /></td>
+            </tr>
+            @if (approvalstatus == "Approved") { 
+            <tr>
+                <td>Projected Start:</td>
+                <td><input style="width: 75px; border: none; font-weight: bold; color: blue;" type="text" disabled value="@(projStart!=null?(projStart.Year<2000?"":projStart.ToShortDateString()):"")" /></td>
+                <td>Projected End:</td>
+                <td><input style="width: 75px; border: none; font-weight: bold; color: blue;" type="text" disabled value="@(projEnd!=null?(projEnd.Year<2000?"":projEnd.ToShortDateString()):"")" /></td>
+            </tr>
+            <tr>
+                <td>Actual Start:</td>
+                <td><input style="width: 75px; border: none; font-weight: bold; color: blue;" type="text" disabled value="@(actStart!=null?(actStart.Year<2000?"":actStart.ToShortDateString()):"")" /></td>
+                <td>Actual End:</td>
+                <td><input style="width: 75px; border: none; font-weight: bold; color: blue;" type="text" disabled value="@(actEnd!=null?(actEnd.Year<2000?"":actEnd.ToShortDateString()):"")" /></td>
+            </tr>
+            }
+        </table>
+
+        <br />
+
+        <a onclick="setZoom('add');"><img src="~/Images/zoom_in.png" alt="zoom in" /></a>
+        <a onclick="setZoom('minus');"><img src="~/Images/zoom_out.png" alt="zoom out" /></a>
+        <span style="margin-left:25px;">Each cell span is equal to :</span>
+        <input type="hidden" id="timespan" value="@timespan" />
+        <input name="timespan_rdo" type="radio" value="7"  onclick="setTimespan(this.value);" />1 Week
+        <input name="timespan_rdo" type="radio" value="14" onclick="setTimespan(this.value);" />2 Weeks
+        <input name="timespan_rdo" type="radio" value="21" onclick="setTimespan(this.value);" />3 Weeks
+        <input name="timespan_rdo" type="radio" value="30" checked onclick="setTimespan(this.value);" />1 Month
+        @*<select style="margin-left:25px;" id="timespan" name="timespan" onchange="DrawGraph(parseInt(document.getElementById('zoom').value), parseInt(document.getElementById('timespan').value));">
+            @{
+                for (int i = 1; i < 31; i++)
+                {
+                    string selval = "";
+                    if (i == timespan)
+                    {
+                        selval = "selected";
+                    }
+                    <option value="@i" @selval>@i</option>
+                }
+            }
+        </select>
+        Days*@
+
+        <br />
+
+        <div id="graphContainer" style="height:610px;width:1250px;overflow:auto">
+            <canvas id="phasesGraph" width="800" height="600" style="border:1px solid lightgray"></canvas>
+        </div>
+        <div>
+            <table class="tblScheds">
+                <tr>
+                    <th>Phases</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>@(approvalstatus == "Proposed"?Html.Raw("&nbsp;"):Html.Raw("% Completed"))</th>
+                    @if(approvalstatus == "Proposed")
+                    {
+                        <th>Defaut Estimated Schedule <br/>Based On a 52-Week Project Plan</th>
+                    }
+                </tr>
+                @{
+                    foreach (var phs in phaseData)
+                    {
+                        string startid = phs.PhaseName + "Start";
+                        string endid = phs.PhaseName + "End";
+                        string pctid = phs.PhaseName + "Pct";
+                        string pctidlbl = phs.PhaseName + "PVal";
+
+                        string phsStart = (phs.StartDate == null?"":phs.StartDate.ToShortDateString());
+                        string phsEnd = (phs.EndDate == null ? "" : phs.EndDate.ToShortDateString());
+                        string j = @phs.PhaseName;
+                        string div = "div" + @phs.PhaseName;
+                        string tname= "name_" + @phs.PhaseName;
+                        string tdescription= "description_" + @phs.PhaseName;
+                        string tsdate= "sdate_" + @phs.PhaseName;
+                        string tedate = "edate_" + @phs.PhaseName;
+                        string tDiv = "taskDiv_" + @phs.PhaseName+"_"+ @phs.PhaseId;
+                        int cntr = 1;
+                        string cls = "task_even";
+                        string Addbutton_span = "addButton_" + @phs.PhaseName+"_"+ @phs.PhaseId;
+                        string Updbutton_span = "UpdButton_" + @phs.PhaseName + "_" + @phs.PhaseId;
+
+
+
+                        <tr>
+                            <td><span style="color:blue;font-size:15px;">@phs.PhaseName</span></td>
+                            <td><input class="dpicker"  id="@startid" name="@startid" type="text" value="@phsStart" @((!hasEdit?"disabled":"")) /></td>
+                            <td><input class="dpicker" id="@endid" name="@endid" type="text" value="@phsEnd" @((!hasEdit ? "disabled" : "")) /></td>
+                            @if(approvalstatus != "Proposed")
+                            {
+                                <td><input id="@pctid" name="@pctid" type="range" min="0" max="100" value="@phs.pct_complete" @((!hasEdit ? "disabled" : "")) onchange="outputUpdate('#@pctidlbl',value);" onblur="document.getElementById('editfld').value = this.id; doPhaseUpdate();" /></td>
+                                <td><span style="width:60px;display:inline-block;"><output for="@pctid" id="@pctidlbl">@phs.pct_complete%</output></span></td>
+                            }
+                            else
+                            {
+                                <td>&nbsp;</td>
+                            }
+                            @if(approvalstatus == "Proposed")
+                            {
+                                <td style="text-align:center;">@phs.duration Weeks</td>
+                            }
+                        </tr>
+                        <tr ><td colspan="4"><div id='@div' style="height:0px;overflow:auto;overflow-x:hidden;overflow-y:hidden;margin-left:20px;font-weight:normal;width:570px"><div><div style="padding:4px;padding-left:0px;">Add a task:</div>
+                                    <div style="float:left;margin-right:10px;"><span style="display:inline-block;width:130px">Task name</span> <input type="text" id='@tname' /></div>
+                                    <div style="clear:both;"></div>
+                                    <div style="float:left;margin-right:10px;"><span style="display:inline-block;width:130px">Task start date</span> <span style="display:inline-block;width:160px;"><input class="dpicker" name='@tsdate' id='@tsdate' type="text" value="" /></span><br /><span id='@Addbutton_span'><input type="button" value="add task" onclick="taskAddFunction('@phs.PhaseName','@phs.PhaseId')" /></span><span id='@Updbutton_span' style="display:none;"><input type="button" value="update task" onclick="taskUpdFunction('@phs.PhaseName')" /></span></div></div>
+                                    <div style="float:left;"><span style="display:inline-block;width:135px">Task end date</span><input type="text" class="dpicker"  name='@tedate' id='@tedate'  value=""  /></div><div style="clear:both;"></div></div>
+                                    <div style="margin-left:10px;"><span id='@j' style="color:green;display:inline-block;margin-left:8px;cursor:pointer;text-decoration:underline;font-weight:normal;font-size:11px;" onclick="taskOpenAddFunction(this,'@phs.PhaseId')">Add task</span></div>
+                                    <div id='@tDiv' style="margin-left:20px;font-weight:normal;border-top:solid 1px #000;">
+                                        @foreach (var ptasks in phaseTasks)
+                                        {
+                                            string titleUpdate = phs.PhaseId + "_" + ptasks.TaskId+"_"+ phs.PhaseName;
+                                            string delT = "delPhase_" + phs.PhaseId + "_" + ptasks.TaskId;
+                                            // string titleUpdate = "";
+
+                                            string v0 = "";
+                                            string v20 = "";
+                                            string v40 = "";
+
+                                            string  dropCheck = "dropDown_" + phs.PhaseId + "_" + ptasks.TaskId;
+
+                                            if (ptasks.pct_complete==0)
+                                            {
+                                                v0 = "selected";
+                                            }
+
+                                            if (ptasks.pct_complete == 20)
+                                            {
+                                                v20 = "selected";
+                                            }
+
+
+                                            if (ptasks.pct_complete == 40)
+                                            {
+                                                v40 = "selected";
+                                            }
+
+
+
+
+
+
+
+                                            string taskStart = (ptasks.StartDate == null ? "" : ptasks.StartDate.ToShortDateString());
+                                            if (ptasks.PhaseId==phs.PhaseId)
+                                            {
+                                                <div class='@cls'><span style="display:inline-block;vertical-align:top;padding:3px;">@cntr.</span><span id='@titleUpdate' class="tasktitleStyle">@ptasks.TaskTitle</span><span style="display:inline-block;vertical-align:top;padding-top:4px;width:200px;"><span style="font-weight:bold;font-size:12px;">Date started:</span><span> @taskStart</span> </span> <span style="display:inline-block;vertical-align:top;padding-top:3px;"><select id='@dropCheck' onchange="changeTaskProgress(this)"><option value=0  @v0>Not Started</option><option value=20 @v20>In Progress</option><option value=40 @v40>Completed</option></select></span><span id='@delT' class="deleteTaskX">x</span></div>
+                                                <!--<div style="background-color:#f3f3f3;border-bottom:solid 1px #000;padding-left:2px;padding-right:2px;"><span style="display:inline-block;vertical-align:top;padding:3px;">2.</span><span style="display:inline-block;width:290px;padding:3px;margin-right:5px;">See the demonstration page and click View Source to see how it's done.</span><span style="display:inline-block;vertical-align:top;padding-top:4px;width:200px;font-size:12px;"><span style="text-decoration:underline;font-weight:bold;">Date started:</span><span> 04/31/2017</span></span> <span style="display:inline-block;vertical-align:top;padding-top:3px;"><select><option>Not Started</option><option>In Progress</option><option>Completed</option><option>Cancelled</option></select></span></div>-->
+                                                cntr = cntr + 1;
+
+                                                if (cls == "task_even")
+                                                {
+                                                    cls = "task_odd";
+                                                }
+                                                else
+                                                {
+                                                    cls = "task_even";
+                                                }
+                                                <script>
+                                                var t={};
+                                                t.PhaseId='@ptasks.PhaseId'
+                                                t.TaskId='@ptasks.TaskId'
+                                                t.TaskTitle='@ptasks.TaskTitle'
+                                                t.StartDate='@ptasks.StartDate'
+                                                t.EndDate='@ptasks.EndDate'
+                                                t.pct_complete='@ptasks.pct_complete'
+
+                                                phaseTasksObj.tasks.push(t)
+                                                </script>
+                                            }
+
+                                        }
+                                    
+                                    </div>
+                                    
+                            </td>
+                        </tr>
+                    }
+                }
+                <tr>
+                    <td colspan="4">&nbsp;</td>
+                </tr>
+                @if(approvalstatus != "Proposed")
+                { 
+                    <tr>
+                        <td colspan="2">Current Phase</td>
+                        <td colspan="2">
+                            <select id="CurrentPhase" name="CurrentPhase" @((!hasEdit ? "disabled" : "")) onchange="document.getElementById('editfld').value='CurrentPhase';doPhaseUpdate();">
+                                @{
+                                    foreach (var phs in phaseData)
+                                    {
+                                        <option value="@phs.PhaseName" @(phs.IsCurrent ? "selected" : "")>@phs.PhaseName</option>
+                                    }
+                                }
+                            </select>
+                        </td>
+                        <td>
+
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            Total Percent Complete
+                        </td>
+                        <td colspan="2"><input id="TotPctComplete" name="TotPctComplete" @((!hasEdit ? "disabled" : "")) name="TotPctComplete" type="range" min="0" max="100" value="@totpct" onchange="outputUpdate('#TotPctCompleteLbl',value);" onblur="document.getElementById('editfld').value = this.id; doPhaseUpdate();" /><output for="TotPctComplete" id="TotPctCompleteLbl">@totpct%</output></td>
+                    </tr>
+                }
+            </table>
+        </div>
+
+    </form>
+
+
+
+    <script type="text/javascript">
+
+
+
+
+    phaseData = {
+
+        @{
+                foreach (var phs in phaseData)
+                {
+                    string objitem = phs.PhaseName + ":{ start:'" +  (phs.StartDate == null?"":phs.StartDate.ToShortDateString()) + "' , end:'" + (phs.EndDate == null?"":phs.EndDate.ToShortDateString()) + "',color:'" + phs.color + "'}," ;
+                    //sample output
+                    //Initiation: { start: '1/1/2015', end: '3/28/2015', color: 'green'},
+                    @Html.Raw(objitem);
+                }
+             }
+    };
+
+        schedDtStart = new Date('@schedStart');
+        schedDtEnd = new Date('@schedEnd');
+
+        DrawGraph(@zoomfactor,@timespan);
+
+        $("#loaderImg").css("display", "none");
+
+        function taskOpenAddFunction(obj,index){
+            $var=$(obj);
+            var c="#div"+$var.attr("id")+"";
+
+
+            $("#UpdButton_"+$var.attr("id")+"_"+index).hide()
+            $("#addButton_"+$var.attr("id")+"_"+index).show();
+
+        
+            var elem =$(c)[0];
+            if($(c).hasClass("open")){
+                TweenMax.to(elem,.5,{css:{height:0}})
+                $(c).removeClass("open");
+            }else{
+                TweenMax.to(elem,.5,{css:{height:140}});
+                $(c).addClass("open")
+            }
+            $("#name_"+$var.attr("id")).val("")
+            $("#sdate_"+$var.attr("id")).val("")
+            $("#edate_"+$var.attr("id")).val("")
+
+        }
+
+
+        function changeTaskProgress(obj){
+
+          
+            var getId=$(obj).attr("id")+"";
+            var getId1=getId.split("_");
+
+            var model = {}
+            model.TaskId=getId1[2]
+            model.PhaseId=getId1[1]
+            model.pct_complete=parseInt($(obj).val());
+            model.ProjectId='@ViewBag.CurrProjId';
+
+            var lengt=phaseTasksObj.tasks.length;
+            var indx=0;
+            for(var t=0;t<lengt;t++){
+                if(phaseTasksObj.tasks[t].TaskId==getId1[2]){
+                    indx=t;
+                }
+            }
+            model.TaskTitle=phaseTasksObj.tasks[indx].TaskTitle;
+            model.StartDate=phaseTasksObj.tasks[indx].StartDate;
+            model.EndDate=phaseTasksObj.tasks[indx].EndDate;
+            model.updateBy='@ViewBag.username';
+           
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("updateTask", "Home")',
+                data: model,
+                async: false
+            }).success(function(data){
+
+                location.href="/Probe/Home/SelectedProject?SelectedTab=2";
+         
+            })
+
+        }
+
+
+        function taskUpdFunction(obj){
+
+
+            var model={}
+            model.ProjectId='@ViewBag.CurrProjId';
+            model.PhaseId=parseInt(phaseTasksObj.tasks[superObj.updateIndex].PhaseId);
+            model.TaskId=parseInt(phaseTasksObj.tasks[superObj.updateIndex].TaskId);
+            model.TaskTitle=$("#name_"+obj).val()
+            model.StartDate=$("#sdate_"+obj).val()
+            model.EndDate=$("#edate_"+obj).val()
+            model.pct_complete=$("#dropDown_"+model.PhaseId+"_"+model.TaskId).val();
+            model.updateBy='@ViewBag.username'
+
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("updateTask", "Home")',
+                data: model,
+                async: false
+            }).success(function(data){
+
+                location.href="/Probe/Home/SelectedProject?SelectedTab=2";
+            })
+
+
+        }
+
+
+
+        function taskAddFunction(obj,index){
+
+            var startdate=$("#sdate_"+obj).val();
+            var enddate=$("#edate_"+obj).val();
+            var nameField=$("#name_"+obj).val();
+            var model={}
+            model.pct_complete=0;
+            model.TaskTitle=nameField
+            model.StartDate=startdate;
+            model.EndDate=enddate;
+            var t= new Date();
+            var f=t+"";
+            f=f.split(" ");
+            var n = t.toLocaleDateString();
+            n=n.split("/");
+            if(parseInt(n[0])<10){
+                n[0]="0"+n[0];
+            }
+            var fer=f[3]+"-"+n[0]+"-"+f[2];
+            model.TaskId="";
+            model.updateDt=fer;
+            model.updateBy='@ViewBag.username';
+            model.ProjectId='@ViewBag.CurrProjId';
+
+            //delete
+           // model.ProjectId=318;
+
+
+            model.pct_complete=0;
+            var g=$(this).parent();
+            //var h=g.split("_");
+            model.PhaseId=index;
+
+         
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("AddTask", "Home")',
+                data: model,
+                async: false
+            }).success(function(data){
+
+                location.href="/Probe/Home/SelectedProject?SelectedTab=2";
+            })
+
+
+
+        }
+
+        $(document).ready(function(){
+            addTaskDeleteHndlers();
+            addUpdateCode();
+
+
+
+
+
+        })
+
+        function addTaskDeleteHndlers(){
+            $(".deleteTaskX").each(function(){
+                $(this).on("click",function(){
+
+                    //phs.PhaseId + "_" + ptasks.TaskId
+                    var del=$(this).attr("id")+"";
+                    var del1=del.split("_");
+
+                    var confirmr=confirm("Would you like to delete this record ?")
+                    if(confirmr==true){
+
+
+                        var model = {};
+                        model.ProjectId='@ViewBag.CurrProjId'
+                        model.PhaseId=del1[1]
+                        model.TaskId=del1[2]
+                        model.UpdateBy='@ViewBag.username'
+                   
+                        $.ajax({
+                            type: 'POST',
+                            url: '@Url.Action("DeleteTask", "Home")',
+                            data: model,
+                            async: false
+                        }).success(function(data){
+
+                            location.href="/Probe/Home/SelectedProject?SelectedTab=2";
+                        })
+
+
+
+                    }
+
+
+                })
+            })
+        }
+
+        var superObj={};
+        superObj.updateIndex=0;
+        function addUpdateCode(){
+            $(".tasktitleStyle").each(function(){
+                $(this).on("click", function(){
+                 
+                    var q=$(this).attr("id")+"";
+                    var q1=q.split("_");
+                    
+                    $("#UpdButton_"+q1[2]+"_"+q1[0]).show()
+                    $("#addButton_"+q1[2]+"_"+q1[0]).hide();
+                    var butt="div"+q1[2];
+                    var elem =document.getElementById(butt);
+                    if($(elem).hasClass("open")){
+
+                    }else{
+                        TweenMax.to(elem,.5,{css:{height:140}});
+                        $(elem).addClass("open")
+                    }
+                    q1[1]
+                    var indx=0;
+                    var leng=phaseTasksObj.tasks.length;
+                    for(var c=0;c<leng;c++){
+                        if(phaseTasksObj.tasks[c].TaskId==q1[1]){
+                            indx=c;
+                            superObj.updateIndex=c;
+                        }
+                    }
+
+                    var start=new Date(phaseTasksObj.tasks[indx].StartDate)
+                    var end=new Date(phaseTasksObj.tasks[indx].EndDate)
+                    start=start.toLocaleDateString();
+                    end=end.toLocaleDateString();
+                    $("#name_"+q1[2]).val(phaseTasksObj.tasks[indx].TaskTitle)
+                    $("#sdate_"+q1[2]).val(start)
+                    $("#edate_"+q1[2]).val(end)
+
+                })
+            })
+        }
+
+
+    </script>
+
+</body>
+</!DOCTYPE>

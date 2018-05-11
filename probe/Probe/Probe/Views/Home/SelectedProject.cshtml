@@ -1,0 +1,382 @@
+﻿@model Probe.Models.ProjectInfo
+
+@{
+    Layout = "~/Views/Shared/_SiteLayout.cshtml";
+    Page.Title = "Selected Project";
+
+} 
+<link href="~/Content/Probe.css" rel="stylesheet" />  
+
+<style>
+
+</style>
+@{
+    string refList = Request["fromList"];
+    Session["ReferringListPage"] = refList;
+    string f = Request.Url.ToString();
+
+    string refPage = Request.Url.ToString();
+    string[] arry = refPage.Split(new[] { "/" }, StringSplitOptions.None);
+    refPage = "http://" + arry[2] + "/Probe/Home/" + refList;
+    //string refPage = "Approved";
+    string returnBtn = "<a class=\"anchorBtn\" href=\"javascript:this.location.href='retPage';\">retTitle</a>";
+    string retTxt = "";
+    string hostName = Request.Url.GetLeftPart(UriPartial.Authority);
+    
+    if (!String.IsNullOrEmpty(refList))
+    {
+        Session["ReferringListPage"] = refList;
+        Session["ReferringListUrl"] = refPage;
+
+        switch (refList)
+        {
+            case "Home":
+                string sub = hostName + "/Probe/" + refList;
+                    refPage = sub;
+             break;
+        }
+       
+        retTxt = "Return to " + refList + " List";
+        returnBtn = returnBtn.Replace("retPage", refPage).Replace("retTitle", retTxt);
+    }
+    else
+    {
+        if (Session["ReferringListPage"] != null)
+        {
+            refList = Session["ReferringListPage"].ToString();
+            refPage = Session["ReferringListUrl"].ToString();
+           
+            retTxt = "Return to " + refList + " List";
+            //refPage = "http://" + arry[2] + "/Probe/Home/" + refPage;
+            returnBtn = returnBtn.Replace("retPage", refPage).Replace("retTitle", retTxt);
+        }
+        else
+        {
+           
+            returnBtn = "&nbsp;";
+        }
+    }
+    try
+    {
+       
+       <br /><br /> <div style="background-color:beige;">
+            <table>
+                <tr>
+                    <td style="font-size: 12pt;font-weight:600;">Selected Project</td>
+                    <td>@Html.TextBoxFor(model => model.ProjectName, new { disabled = "disabled", style = "width: 940px;font-size:11pt;", @onkeydown = "return false;", contenteditable = false })</td>
+                    <td>@Html.Raw(@returnBtn)</td>
+                </tr>
+                @if (ViewBag.SelectedTab == "0") 
+                {
+                    if (Model.ApprovalStatus == "Approved" && Model.ActivityStatus == "Not Started")
+                    {
+                        if (ViewBag.ShowInitApprove) 
+                        {                                 
+                        <tr>
+                            <td style="padding-top: 10px;">
+                                <input type="button" id="btnInitApprove" class="btnApprove" name="Approve Initiation" value="Approve Initiation" onclick="javascript:approveProjectInit();" />
+                            </td>
+                        </tr>
+                        }
+                    }
+                }
+                
+
+                    <tr>
+                        <td style="padding-top: 10px;">
+                            <span id="templateButton" style="display:none;"><input type="button" id="useAsTemp" class="btnApprove" name="Use as Template" value="Use as Template" onclick="javascript:useAsTemplate()" /></span>
+                        </td>
+                    </tr>
+
+             
+            </table>
+        </div>
+
+        <div id="tabs">
+            <ul>
+                <li><a href="#tabs-1" onclick="javascript: SelectTab(0)">Project Info</a></li>
+                <li><a href="#tabs-2" onclick="javascript: SelectTab(1)">Budget Details</a></li>
+                <li><a href="#tabs-3" onclick="javascript: SelectTab(2)">Schedule Details</a></li>
+                <li><a href="#tabs-4" onclick="javascript: SelectTab(3)">Benefit Details</a></li>
+                <li><a href="#tabs-5" onclick="javascript: SelectTab(4)">Resource Details</a></li>
+                <li><a href="#tabs-6" onclick="javascript: SelectTab(5)">Impact to Operations</a></li>
+                <li><a href="#tabs-7" onclick="javascript: SelectTab(6)">Project Risk Details</a></li>
+                <li><a href="#tabs-8" onclick="javascript: SelectTab(7)">Change Log</a></li>
+            </ul>
+            <div id="tabs-1" style="clear:both;">
+                @if (ViewBag.SelectedTab == "0")
+                {
+                    
+
+                    
+                    if (Model.ApprovalStatus == "Approved")
+                    {
+                        @Html.Action("ApprovedProjectInfo");
+                       
+                    }
+                    else if (Model.ApprovalStatus == "Proposed")
+                    {
+                       @Html.Action("ProposedProjectInfo");
+                       
+                    }
+                }
+            </div>
+            <div id="tabs-2">
+                @if (ViewBag.SelectedTab == "1")
+                {
+                   
+                    if (Model.ApprovalStatus == "Proposed")
+                    {
+                        @Html.Action("ProposedBudget");
+                        <script>
+                            //$("#templateButton").hide();
+                        </script>
+                    }
+                    else
+                    {
+                        @Html.Action("ApprovedBudget");
+                        <script>
+                           // $("#templateButton").hide();
+                        </script>
+                    }
+                }
+            </div>
+            <div id="tabs-3">
+               
+                 @if (ViewBag.SelectedTab == "2") 
+                { 
+                    @Html.Action("ScheduleDetails");
+                    <script>
+                       // $("#templateButton").hide();
+                    </script>
+                 }
+            </div>
+            <div id="tabs-4">
+                @if (ViewBag.SelectedTab == "3")
+                {
+                    @Html.Action("Benefits");
+                    <script>
+                       // $("#templateButton").hide();
+                    </script>
+                }
+            </div>
+            <div id="tabs-5">
+                <img id="loaderImg" src="../images/loader.gif" alt="loader image" />
+                @if (ViewBag.SelectedTab == "4") 
+                { 
+                    @Html.Action("Resources");
+                    <script>
+                        //$("#templateButton").hide();
+                    </script>
+                }
+            </div>
+            <div id="tabs-6">
+              
+                @if (ViewBag.SelectedTab == "5") 
+                { 
+                    @Html.Action("ImpactToOperations");
+                    <script>
+                        //$("#templateButton").hide();
+                    </script>
+                }
+            </div>
+            <div id="tabs-7">
+                @if (ViewBag.SelectedTab == "6") 
+                { 
+                    @Html.Action("Risks");
+                    <script>
+                       // $("#templateButton").hide();
+                    </script>
+                }
+            </div>
+            <div id="tabs-8">
+                
+                @if (ViewBag.SelectedTab == "7") 
+                { 
+                    @Html.Action("ChangeLog");
+                    <script>
+                        //$("#templateButton").hide();
+                    </script>
+                }
+            </div>
+        </div>
+
+    }
+    catch (Exception ex)
+    {
+        <h3>@ex.Message</h3>
+    }
+
+}
+
+<script>
+
+
+    
+    var ProjID=@Model.ProjectId;
+    //alert(@Model.ProjectId)
+    $(function () {
+        ////track which tab you are on
+        var index = 'key';
+        var dataStore = window.sessionStorage;
+        try {
+            var oldIndex = dataStore.getItem(index);
+        } catch (e) {
+            var oldIndex = 0;
+        }
+        $('#tabs').tabs({
+            active: oldIndex,
+            activate: function (event, ui) {
+                var newIndex = ui.newTab.parent().children().index(ui.newTab); dataStore.setItem(index, newIndex);
+            }
+        });
+        $("#loaderImg").css("display", "none");
+    });
+
+
+    function approveProjectInit() {
+        var mgr = $("#ProjectManager").val();
+        var spnsr = $("#Sponsor").val();
+        var scope = $("#Scope").val();
+        var bnum = $("#BudgetNumber").val();
+
+        if (mgr == "" || spnsr == "" || scope == "") {
+            alert("Please select values for Manager, Sponsor and Scope.");
+            return false;
+        }
+
+        if (bnum == "") {
+            var okgo = window.confirm("The Budget Number has no value. Do you want to Approve anyway?");
+            if (!okgo) {
+                return false;
+            }
+        }
+
+        var acturl = "http://" + location.host + "/" + location.pathname.split("/")[1] + "/Home/approveProjectInit";
+        $.ajax({
+            url: acturl,
+            type: 'POST',
+            success: function (result) {
+                $.ajax({
+                    type: 'POST',
+                    url: '/Probe/Home/AddToChangeLogInitiation',
+                    data: 'myData',
+                    async: false
+
+                }).complete(function () {
+                    //alert("return")
+                })
+
+
+                $("#btnInitApprove").css("display", "none");
+
+                if (result.indexOf("Error") > -1 ) {
+                    // changed alert(result);
+                    //alert('An error occurred in processing the request. Alert the admin of this error if it persists.');
+                } else{
+
+
+                    alert('Approval emails have been sent.');
+                }
+            },
+            failure: function (result) {
+                //alert("Failed");
+            }
+        });
+    }
+
+    function useAsTemplate() {
+    
+        var qStrg=window.location.search+"";
+        qStrg1=qStrg.split("&");
+        var f=qStrg1[1]+"";
+        var f1=f.split("=");
+        console.log(f1[1])
+        var model = {};
+        $("#projectInfoForm :input").each(function () {
+
+
+            switch($(this).attr("id")){
+
+                case 'Manager':
+                    model[$(this).attr("id")] = $.trim($(this).find('option:selected').text());
+                    model[$(this).attr("id")+"_id"] =$(this).val();
+                    break;
+
+                case 'Sponsor':
+                    model[$(this).attr("id")] = $.trim($(this).find('option:selected').text());
+                    model[$(this).attr("id")+"_id"] =$(this).val();
+                    break;
+
+                case 'Engineer':
+                    model[$(this).attr("id")] = $.trim($(this).find('option:selected').text());
+                    model[$(this).attr("id")+"_id"] =$(this).val();
+                    break;
+
+
+                default:
+                    model[$(this).attr("id")] = $(this).val();
+                    break;
+            }
+
+            
+        })
+
+        switch(f1[1]){
+            case 'Proposed':
+                model.ProjectedEnd=model.ProposedEnd;
+                model.ProjectedStart=model.ProposedStart;
+                break;
+        }
+
+
+        var modModel = JSON.stringify(model);
+        sessionStorage.setItem("newModel", modModel);
+        location.href = "/Probe/Home/ProjectTemplate";
+      
+    }
+
+
+
+    //Delete Attachment
+    function DeleteAttachment(id) {
+        $("#dialog-message").dialog({
+            resizable: false,
+            width: 375,
+            modal: true,
+            buttons: {
+                "Yes": function () {
+                    $("#dialog-message").css({"width":"120px","margin":"auto","height":"120px"});
+                    $(".ui-dialog-buttonset").hide();
+                    document.getElementById('dialog-message').innerHTML = "<div class='loader'></div>"
+                   
+                    var myData = {projId: @Model.ProjectId, attachmentId: id };
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("deleteAttachment", "Home")',
+                        data: myData,
+                        async: false
+                    }).success(function (msg) {
+                       
+                        location.reload();
+                    }).fail(function (msg) {
+                        alert("There was an error while deleting.");
+                        $('#dialog-message').dialog("close");
+                    });
+                },
+                "No": function () {
+                    
+        
+                  $(this).dialog("close");
+                }
+            }
+        });
+
+        $('#dialog-message').dialog('option', 'title', 'Delete Project Attachment');
+        document.getElementById('dialog-message').innerHTML =   "<p><span class='ui-icon ui-icon-alert' style='float:left; margin:0 7px 20px 0;'></span>Are you sure you want to delete this attachment?</p>"
+
+    }
+
+</script>
+
+

@@ -1,0 +1,420 @@
+﻿
+
+<script src="~/Scripts/bootstrap.min.js"></script>
+<link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+<div>
+
+    <style type="text/css">
+        .labl {
+            width: 150px !important;
+            margin-left: 25px !important;
+        }
+
+        .selClass {
+            width: 180px !important;
+        }
+
+
+        .grid1 {
+            background-color: #ddd;
+        }
+
+        .grid1_over {
+            background-color: #eee;
+        }
+    </style>
+
+
+    <div style='padding:8px;'>
+        <div class="form-inline">
+            <label for="exampleInputName2" class="labl">Project name</label>
+            <p class="form-control-static" id="ProjectName"></p>
+
+
+            <div class="form-group">
+                <label for="exampleInputEmail2" style="width:110px;margin-left:15px;">Project number</label>
+                <p class="form-control-static" id="BudgetNum"></p>
+            </div>
+
+
+            <div class="form-group">
+                <label for="exampleInputEmail2" style="width:110px;margin-left:15px;">Budget number</label>
+                <p class="form-control-static" id="BudgetNum"></p>
+            </div>
+
+        </div>
+
+        <div class="form-inline">
+            <label for="exampleInputEmail2" class="labl" style='width:70px;'>Creator</label>
+            <p class="form-control-static" style="width:140px" id="Creator"></p>
+
+            <label for="exampleInputName2" class="labl">Current Budgeted Total</label>
+            <p class="form-control-static" style="width:120px;">$382,905</p>
+
+            <label for="exampleInputName2" style="margin-left:5px;width:120px;">Projected Total</label>
+            <p class="form-control-static" style="width:120px;">$179,253</p>
+
+            <label for="exampleInputName2" style="width:110px;margin-left:15px;">Actual Total</label>
+            <p class="form-control-static" style="width:60px;">$2,189</p>
+        </div>
+
+        <div class="form-inline">
+            <label for="exampleInputName2" class="labl">Project Manager</label>
+            <select class="form-control selClass">
+                <option>Marcus Estes</option>
+                <option>Claire Pukas</option>
+                <option>Doreen Marson</option>
+                <option>Jeff Hayes</option>
+                <option>Mark Heizler</option>
+            </select>
+
+
+
+            <label for="exampleInputName2" class="labl">Project Sponsor</label>
+            <select class="form-control selClass">
+                <option>Charles Williams</option>
+                <option>Shermeen Ajani</option>
+                <option>Mark Sullivan</option>
+                <option>Marcus Estes</option>
+                <option>Kathy Gibson</option>
+            </select>
+
+
+            <label for="exampleInputName2" class="labl">Project Engineer</label>
+            <select class="form-control selClass">
+                <option>Shermeen Ajani</option>
+                <option>Charles Williams</option>
+                <option>Kathy Gibson</option>
+                <option>Mark Sullivan</option>
+                <option>Marcus Estes</option>
+
+            </select>
+
+
+
+        </div>
+
+
+
+
+
+
+
+        <div class="form-inline" style='margin-top:10px;'>
+            <label for="exampleInputName2" class="labl">Proposed Start date</label>
+            <input type="text" class="form-control" style="width:180px;" placeholder="Click for date">
+
+
+
+            <label for="exampleInputName2" class="labl">Proposed End date</label>
+            <input type="text" class="form-control" style="width:180px;" placeholder="Click for date">
+
+            <label for="exampleInputName2" class="labl">Projected Start date</label>
+            <input type="text" class="form-control" style="width:180px;" placeholder="Click for date">
+
+
+
+
+        </div>
+        <div class="form-inline" style='margin-top:10px;'>
+            <label for="exampleInputName2" class="labl">Projected End date</label>
+            <input type="text" class="form-control" style="width:180px;" placeholder="Click for date">
+
+            <label for="exampleInputName2" class="labl">Actual Start date</label>
+            <input type="text" class="form-control" style="width:180px;" placeholder="Click for date">
+
+            <label for="exampleInputName2" class="labl">Actual End date</label>
+            <input type="text" class="form-control" style="width:180px;" placeholder="Click for date">
+        </div>
+
+
+
+        <div class="form-inline" style='margin-top:10px;'>
+
+            <label for="exampleInputName2" class="labl">Approval Status</label>
+            <select class="form-control selClass">
+                <option>Approved</option>
+                <option>Proposed</option>
+            </select>
+
+
+
+            <label for="exampleInputName2" class="labl">Activity Status</label>
+            <select class="form-control selClass">
+                <option>Cancelled</option>
+                <option>Completed</option>
+                <option>In progress</option>
+                <option>Not started</option>
+                <option>On hold</option>
+            </select>
+
+
+            <label for="exampleInputName2" class="labl">Customer</label>
+            <p class="form-control-static" style="width:140px">GSOC</p>
+
+        </div>
+
+
+        <div class="form-inline">
+            <label for="exampleInputName2" class="labl">Budget Type</label>
+            <select class="form-control selClass">
+                <option>Capital</option>
+                <option>Expense</option>
+            </select>
+
+
+            <label for="exampleInputName2" class="labl">Contractual Agreements</label>
+            <select class="form-control selClass">
+                <option>License</option>
+                <option>Warranty</option>
+                <option>Rent/Lease</option>
+                <option>Service Agreement</option>
+                <option>Maintenance</option>
+            </select>
+
+
+            <label for="exampleInputEmail2" class="labl">Expiration</label>
+            <input type="text" class="form-control" style="width:180px;" placeholder="Click for date">
+        </div>
+
+
+        <div class="form-inline" style='margin-top:10px;'>
+
+
+            <label for="exampleInputName2" class="labl">Current Phased</label>
+            <input type="text" class="form-control" style="width:180px;" placeholder="Click for date">
+
+            <label for="exampleInputName2" class="labl">Total % Complete</label>
+            <input type="text" class="form-control" style="width:180px;" placeholder="Click for date">
+
+           
+
+
+        </div>
+
+
+
+        <label for="exampleInputEmail2" class="labl">Justification</label>
+        <div style='width:90%;margin-left:25px;margin-top:10px;'> <form> <textarea class="form-control" rows="3" placeholder="Textarea"></textarea> </form> </div>
+
+
+        <label for="exampleInputEmail2" class="labl">Comment</label>
+        <div style='width:90%;margin-left:25px;margin-top:10px;'> <form> <textarea class="form-control" rows="3" placeholder="Textarea"></textarea> </form> </div>
+
+        <label for="exampleInputEmail2" class="labl">Scope</label>
+        <div style='width:90%;margin-left:25px;margin-top:10px;'> <form> <textarea class="form-control" rows="3" placeholder="Textarea"></textarea> </form> </div>
+
+    </div>
+
+    <div class="form-inline">
+        <label for="exampleInputName2" class="labl">Assign to Group</label>
+        <select class="form-control" style="width:300px">
+            <option>Strategic Initiative - System Operations</option>
+            <option>Warranty</option>
+            <option>Janaury 1 2014 Projects</option>
+            <option>Service Agreement</option>
+            <option>ECMS Infrastructure Improvements</option>
+        </select>
+
+
+
+
+        <label for="exampleInputName2" class="labl">Assigned Groups</label>
+        <select class="form-control" style="width:300px">
+
+            <option>Janaury 1 2014 Projects</option>
+            <option>Service Agreement</option>
+            <option>ECMS Infrastructure Improvements</option>
+        </select>
+    </div>
+
+    <div class="form-inline" style='margin-top:10px;'>
+
+        <h2><label for="exampleInputEmail2" class="labl">Updates</label></h2>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="width:28px;"></th>
+                        <th style="width:28px;"></th>
+                        <th style="width:28px;"></th>
+                        <th>Date Created</th>
+                        <th>Explanation</th>
+                        <th>Owner</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="grid1">
+                        <td><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span></td>
+                        <td><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span></td>
+                        <td><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></td>
+                        <td>4/17/2017 9:21:22 AM</td>
+                        <td>See attachment for latest updates</td>
+                        <td>Andrea Barclay</td>
+                    </tr>
+                    <tr class="grid1_over">
+                        <td><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span></td>
+                        <td><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span></td>
+                        <td><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></td>
+                        <td>3/10/2017 8:20:14 AM</td>
+                        <td>See attachment (March 11th Updates) for latest updates</td>
+                        <td>Andrea Barclay</td>
+                    </tr>
+                    <tr class="grid1">
+                        <td><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span></td>
+                        <td><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span></td>
+                        <td><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></td>
+                        <td>4/17/2017 9:21:22 AM</td>
+                        <td>See attachment for latest updates</td>
+                        <td>Andrea Barclay</td>
+                    </tr>
+                    <tr class="grid1_over">
+                        <td><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span></td>
+                        <td><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span></td>
+                        <td><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></td>
+                        <td>3/10/2017 8:20:14 AM</td>
+                        <td>See attachment (March 11th Updates) for latest updates</td>
+                        <td>Andrea Barclay</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+    <div class="form-inline" style='margin-top:10px;'>
+
+        <h2><label for="exampleInputEmail2" class="labl">Issues</label></h2>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="width:28px;"></th>
+                        <th style="width:28px;"></th>
+                        <th style="width:28px;"></th>
+                        <th>Date Created</th>
+                        <th>Explanation</th>
+                        <th>Owner</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="grid1">
+                        <td><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span></td>
+                        <td><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span></td>
+                        <td><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></td>
+                        <td>4/17/2017 9:21:22 AM</td>
+                        <td>See attachment for latest updates</td>
+                        <td>Andrea Barclay</td>
+                        <td>On hold</td>
+                    </tr>
+                    <tr class="grid1_over">
+                        <td><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span></td>
+                        <td><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span></td>
+                        <td><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></td>
+                        <td>3/10/2017 8:20:14 AM</td>
+                        <td>See attachment (March 11th Updates) for latest updates</td>
+                        <td>Andrea Barclay</td>
+                        <td>Opened</td>
+                    </tr>
+                    <tr class="grid1">
+                        <td><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span></td>
+                        <td><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span></td>
+                        <td><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></td>
+                        <td>4/17/2017 9:21:22 AM</td>
+                        <td>See attachment for latest updates</td>
+                        <td>Andrea Barclay</td>
+                        <td>Opened</td>
+                    </tr>
+                    <tr class="grid1_over">
+                        <td><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span></td>
+                        <td><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span></td>
+                        <td><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></td>
+                        <td>3/10/2017 8:20:14 AM</td>
+                        <td>See attachment (March 11th Updates) for latest updates</td>
+                        <td>Andrea Barclay</td>
+                        <td>Started</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+
+
+
+    <div class="form-inline" style='margin-top:10px;'>
+
+        <h2><label for="exampleInputEmail2" class="labl">Issues</label></h2>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="width:28px;"></th>
+                        <th style="width:28px;"></th>
+                        <th style="width:28px;"></th>
+                        <th>Date Created</th>
+                        <th>Title</th>
+                        <th>Group</th>
+                        <th>File Type</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+    </div>
+
+
+
+
+
+    <div class="form-inline" style='margin-top:10px;'>
+
+        <h2><label for="exampleInputEmail2" class="labl">Contributors</label></h2>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="width:28px;"></th>
+                        <th style="width:28px;"></th>
+                        <th style="width:28px;"></th>
+                        <th>Date Created</th>
+                        <th>Contributor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="grid1">
+                        <td><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span></td>
+                        <td><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span></td>
+                        <td><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></td>
+                        <td>4/17/2017 9:21:22 AM</td>
+                        <td>Andrea Barclay</td>
+                      
+                    </tr>
+                    </tbody>
+</table>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    var b = '@ViewBag.project';
+    cha = b.replace(/&quot;/g, "\"");
+    var projectObj = $.parseJSON(cha);
+    console.log(3434)
+    console.log(projectObj)
+    console.log(3434)
+
+</script>
+
+

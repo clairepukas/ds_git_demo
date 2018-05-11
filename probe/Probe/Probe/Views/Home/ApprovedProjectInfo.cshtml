@@ -1,0 +1,1188 @@
+﻿<!DOCTYPE html/>
+<style>
+
+    table{
+        border-spacing:1px !important;
+        border-collapse:initial !important;
+       
+    }
+
+    th{
+         /*border-color:red;*/
+         border:solid 1px lightgray;
+         text-align:center;
+    }
+
+    .erpir{
+        display:none;
+    }
+</style>
+
+
+
+<script>
+    $("#templateButton").show();
+    var t="@ViewBag.attachments"+"";
+    t = t.replace(/&quot;/g,"\"");
+    var projectAttachments=$.parseJSON(t);
+    var aGroups="@ViewBag.attachmentgroups"+"";
+    aGroups = aGroups.replace(/&quot;/g,"\"");
+    var attachmentGroups=$.parseJSON(aGroups);
+
+    function updateFields(obj){
+        var str= "/Probe/Home/UpdateProjectData";
+        var id=$(obj).attr("id");
+        var val=$(obj).val();
+        var model={};
+        var id2=$("#warrantyAgreement").val();
+        var id3 = $("#warrantyAgreement").attr("id")
+
+
+        if($(obj).attr("id")=="warrantyAgreement" && id2!="Unknown" ){
+            $("#expirDiv").show();
+            $("#vendDiv").show();
+            $("#termDiv").show();
+            model.update_Field_Info = $(obj).attr("id");
+            model.ServiceAgreementType = $(obj).val();
+      
+        }
+
+        if ($(obj).attr("id")=="warrantyAgreement" && id2=="Unknown"){
+            $("#expirDiv").hide();
+            $("#vendDiv").hide();
+            $("#termDiv").hide();
+            model.update_Field_Info = $(obj).attr("id");
+            model.ServiceAgreementType = $(obj).val();
+       
+        }
+  
+
+        var update="yes";
+        if(id="Unknown"){
+
+        }
+       
+        //model[id]=$(obj).val();
+        model.ProjectId=@ViewBag.pid;
+        if ($(obj).val() == "" || $(obj).val() == "Unknown") {
+            
+
+            if ($(obj).attr("id") == "ServiceAgreementVendorId") {
+                model.ServiceAgreementVendorId = null;
+                $("#ServiceAgreementVendorId").val("")
+                model.warrantyAgreementDate = $("#warrantyAgreementDate").val();
+                model.warrantyAgreement = $("#warrantyAgreement").val();
+
+
+            }
+
+            if ($(obj).attr("id") == "warrantyAgreement") {
+                model.ServiceAgreementVendorId = null;
+                model.warrantyAgreementDate = null;
+                model.warrantyAgreement = null;
+                model.ServiceAgreementVendorId = null;
+                $("#warrantyAgreementDate").val("")
+                $("#ServiceAgreementVendorId").val("")
+            }
+
+
+            
+          
+           
+        }else{
+            
+            model.warrantyAgreementDate=$("#warrantyAgreementDate").val();
+            model.warrantyAgreement=$("#warrantyAgreement").val();
+            model.ServiceAgreementVendorId = $("#ServiceAgreementVendorId").val();
+            
+        }
+
+
+        model.ProjectedStart = $("#ProjectedStart").val();
+        model.ProjectedEnd = $("#ProjectedEnd").val();
+        model.ActualStart = $("#ActualStart").val();
+        model.ActualEnd = $("#ActualEnd").val();
+
+
+
+        if($('#TerminateServiceAgreementAlert').is(':checked')==true){
+            model.TerminateServiceAgreementAlert=true;
+        }else{
+            model.TerminateServiceAgreementAlert=false;
+        }
+
+        
+
+      
+      
+        $.ajax({
+            url: str,
+            type: "POST",
+            data: model,
+            async: false
+            //dataType: "json"
+        }).success(function(data) {
+
+        }).error(function (msg) {
+            alert("There was an error while making update.");;
+        });
+
+    }
+</script>
+
+
+@model Probe.Models.ProjectInfo
+
+
+@{
+    try
+    {
+        //Get selected proj
+        var db = WebMatrix.Data.Database.Open("probedb");
+
+        //Get updates
+        var updatelist = db.Query(@"Select ProjectUpdateId
+                                        ,Explanation
+                                        ,b.DisplayName as UpdateOwner
+                                        ,b.UserId as UpdateOwnerId
+                                        ,a.createDt
+                                    FROM ProjectUpdates  a
+	                                join Users b
+	                                on a.UpdateOwner = b.UserId
+                                    WHERE ProjectId = @0
+                                    ORDER BY createDt desc", Model.ProjectId);
+
+        //Get Project Issues
+        var issueList = db.Query(@"SELECT ProjectIssueId
+		                                ,Explanation
+		                                ,Resolution
+		                                ,b.DisplayName as IssueOwner
+                                        ,b.UserName as IssueOwnerUserName
+		                                ,IssueStatus
+		                                ,TargetDate
+		                                ,a.createDt
+	                                FROM ProjectIssues a
+	                                join Users b
+	                                on a.IssueOwner = b.UserId
+                                    WHERE ProjectId = @0
+	                                ORDER BY createDt desc", Model.ProjectId);
+
+        //Get Phase Info
+        var phase = db.QueryValue(@"SELECT b.PhaseName
+                              FROM ProjectPhases a
+                              join Phases b
+                              on a.PhaseId = b.PhaseId
+                              where ProjectId = @0
+                              and pct_complete < 100
+                              and IsCurrent = 1", Model.ProjectId);
+
+        //Get Contributors
+        var contributors = db.Query(@"Select b.DisplayName,
+	                                           b.UserName,
+                                               b.UserId,
+	                                           a.createDt
+                                        FROM  ProjectUserRoles a
+                                        join Users b
+                                        on a.UserId = b.UserId
+                                        where ProjectId = @0
+                                        and ProjectRole = 'Contributor'", Model.ProjectId);
+
+        <script src="~/Scripts/ProbeScripts/ProjectInfo.js?rfrsh=true"></script>
+        
+        <div style="background-color:beige; width:100%;">
+            <span style="font-size: 11pt;font-weight:500;">Project Information</span>
+        </div>
+
+       
+        using (Html.BeginForm("UpdateProjectInfo", "Home", FormMethod.Post, new { id = "projectInfoForm" }))
+        {
+            <table class="projInfoTable">
+                <tr>
+                    <td colspan="2">
+                        @Html.HiddenFor(model => model.ProjectId)
+                        @Html.LabelFor(model => model.DisplayName)
+                        <input type="text" class="form-control" id="DisplayName" name="DisplayName" value='@Model.DisplayName' style="width:400px;" onChange="fieldChanged(this)" />
+                       
+                        @{Html.ValidateFor(model => model.DisplayName);}
+                        
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ProjectNumber)
+                        @Html.TextBoxFor(model => model.ProjectNumber, new { disabled = "disabled", style = "width: 150px;border:0;" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.BudgetNum)
+                        <input type="text" class="form-control" id="BudgetNum" name="BudgetNum" value='@Model.BudgetNum' style="width:150px;" onChange="fieldChanged(this)" />
+                        @{Html.ValidateFor(model => model.BudgetNum);}
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ProjectType)
+                        @Html.DropDownListFor(model => model.ProjectType, Model.BudgetTypeList, ViewBag.ProjectTypeDisabled ? (object)new { disabled = "disabled", style = "width:150px" } : new { @class="form-control", style = "width: 150px;", onChange = "fieldChanged(ProjectType);"})
+                    </td>
+                </tr>
+
+                <tr>
+                    <td valign = "top">
+                        @Html.LabelFor(model => model.Manager, "Project Manager")
+                        @Html.DropDownListFor(model => model.Manager, Model.ManagerList, ViewBag.ManagerDisabled ? (object)new { disabled = "disabled" } : new { @class = "form-control", id = "Manager", style = "width: 150px;", onChange = "fieldChanged(Manager);" })
+                        @{Html.ValidateFor(model => model.Manager);}
+                            
+</td>
+                    <td valign = "top">
+                        @Html.LabelFor(model => model.Sponsor)
+                        @Html.DropDownListFor(model => model.Sponsor, Model.SponsorList, ViewBag.SponsorDisabled ? (object)new { disabled = "disabled" } : new { @class = "form-control", id = "Sponsor", style = "width: 150px;", onChange = "fieldChanged(Sponsor);" })
+                        @{Html.ValidateFor(model => model.Sponsor);}
+                    </td>
+                    <td valign="top">
+                        @Html.LabelFor(model => model.Engineer)
+                        @Html.DropDownListFor(model => model.Engineer, Model.EngineerList, ViewBag.EngineerDisabled ? (object)new { disabled = "disabled" } : new { @class = "form-control", id = "Engineer", style = "width: 150px;", onChange = "fieldChanged(Engineer);" })
+                        @{Html.ValidateFor(model => model.Engineer);}
+                    </td>
+                    <td valign="top">
+                        @Html.LabelFor(model => model.Creator)
+                        @Html.TextBoxFor(model => model.Creator, new { disabled = "disabled", style = "width: 150px;border:0;" })
+                    </td>
+                    <td>
+                        
+                        <div >
+                            <label >Contractual Agreements</label>
+                            @Html.DropDownListFor(model => model.warrantyAgreement, Model.warrantyAgreementTypes, ViewBag.EngineerDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { @class = "form-control", style = "width: 150px;", onChange = "updateFields(this)" })
+                        </div>
+                       
+
+                       
+</td>
+                </tr>
+    <tr>
+
+        <td>
+            
+            <br />
+            <div style="margin-top:10px;float:left;">
+                <label>Priority</label>
+                @Html.CheckBoxFor(model => model.Priority, ViewBag.PriorityDisabled ? (object)new { disabled = "disabled" } : new { @class = "form-control", id = "Priority" })
+            </div>
+            @if (Convert.ToBoolean(Session["UserIsAdmin"].ToString()) == true)
+            {
+                <div style="margin-top:10px;margin-left:10px;float:left;">
+                    <label>Display</label>
+                    <input id="display" type="checkbox" class="form-control" value="yes" onchange="updateDisplay(this)">
+                </div>
+            }
+            else
+            {
+                <div style="margin-top:10px;margin-left:10px;float:left;">
+                    <label>Display</label>
+                    <input id="display" class="form-control" type="checkbox" value="yes" disabled>
+                </div>
+            }
+
+
+            <div style="clear:both;"></div>
+
+        </td>
+        <td> 
+
+            @Html.LabelFor(model => model.ActivityStatus)
+            @Html.DropDownListFor(model => model.ActivityStatus, Model.ActivityStatusList, ViewBag.ActivityStatusDisabled ? (object)new { disabled = "disabled" } : new { @class = "form-control", style = "width: 150px;", onChange = "activityStatusChanged(ActivityStatus);" })
+
+
+        </td>
+        <td>
+            @Html.LabelFor(model => model.ApprovalStatus)
+            @Html.DropDownListFor(model => model.ApprovalStatus, Model.ApprovalStatusList, ViewBag.ActivityStatusDisabled ? (object)new { disabled = "disabled" } : new { @class = "form-control", style = "width: 150px;", onChange = "approvalStatusChanged('approvalStatus');" })
+        </td>
+        <td></td>
+        <td><div id="expirDiv" style="margin-bottom:3px;">
+                @Html.LabelFor(model => model.warrantyAgreementDate, new { style = "width: 180px;border:0;" })
+                @Html.TextBoxFor(model => model.warrantyAgreementDate, ViewBag.DisplayNameDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { @class = "form-control", style = "width: 150px;maxlength:355;", onChange = "updateFields(this)" })
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>
+            <div id="vendDiv">
+                <label>Vendor</label>
+                @Html.DropDownListFor(model => model.ServiceAgreementVendorId, Model.vendorList, ViewBag.EngineerDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { @class = "form-control", style = "width: 150px;", onChange = "updateFields(this)" })
+            </div>
+            <div id="termDiv" style="display:none;">
+                <div style="font-weight:bold;float:left;padding-top:5px;">Terminate alert</div>
+                <div style="float:left;padding-top:3px;margin-left:10px;"><input id="TerminateServiceAgreementAlert" type="checkbox" value="yes" onClick="updateFields(this);"></div>
+                <div style="clear:both;"></div>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="5">
+            <label>Justification</label>
+            @Html.TextAreaFor(model => model.Justification, ViewBag.JustificationDisabled ? (object)new { disabled = "disabled" } : new { @class = "form-control", id = "Justification", rows = 4, style = "width: 1250px;", onChange = "fieldChanged(Justification);" })
+        </td>
+    </tr>
+                
+               
+                <tr>
+                    <td valign="top">
+                        @Html.LabelFor(model => model.ProposedStart)
+                        @Html.TextBoxFor(model => model.ProposedStart, "{0:MM/dd/yyyy}", new { @class = "form-control", id = "ProposedStart", disabled = "disabled", style = "width: 150px;" })
+                    </td>
+                    <td valign="top">
+                        @Html.LabelFor(model => model.ProposedEnd)
+                        @Html.TextBoxFor(model => model.ProposedEnd, "{0:MM/dd/yyyy}", new { @class = "form-control", id = "ProposedEnd", disabled = "disabled", style = "width: 150px;" })
+                    </td>
+                    <td>
+                       
+                       
+                    </td>
+                    <td valign="top">
+                        @Html.LabelFor(model => model.BudgetedTotal)
+                        @Html.TextBoxFor(model => model.BudgetedTotal, "{0:C}", new { disabled = "disabled", style = "width: 150px; border:0;" })
+                    </td>
+                    <td valign="top">
+                        <label>Current Phased</label>
+                        <input type="text" disabled="disabled" value="@phase" style="width: 150px; border:0;" />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="5">
+                        @Html.LabelFor(model => model.Scope)
+                        @Html.TextAreaFor(model => model.Scope, ViewBag.ScopeDisabled ? (object)new { disabled = "disabled" } : new { @class = "form-control", id = "Scope", rows = 4, style = "width: 1250px;", onChange = "fieldChanged(Scope);" })
+                    </td>
+                </tr>
+                <tr>
+                    <td valign="top">
+                        @Html.LabelFor(model => model.ProjectedStart)
+                        @Html.TextBoxFor(model => model.ProjectedStart, "{0:MM/dd/yyyy}", ViewBag.ProjectedStartDisabled ? (object)new {  disabled = "disabled", style = "width:150px" } : new { @class = "form-control", id = "ProjectedStart", style = "width: 150px;", onChange = "dateFieldChanged(ProjectedStart);" })
+                    </td>
+                    <td valign="top">
+                        @Html.LabelFor(model => model.ProjectedEnd)
+                        @Html.TextBoxFor(model => model.ProjectedEnd, "{0:MM/dd/yyyy}", ViewBag.ProjectedEndDisabled ? (object)new { disabled = "disabled", style = "width:150px" } : new { @class = "form-control", id = "ProjectedEnd", style = "width: 150px;", onChange = "dateFieldChanged(ProjectedEnd);" })
+                    </td>
+                    <td valign="top">
+                        @Html.LabelFor(model => model.Customer)
+                        @Html.DropDownListFor(model => model.Customer, Model.CustomerList, ViewBag.CustomerDisabled ? (object)new { id = "Customer", disabled = "disabled", style = "width:150px" } : new { @class = "form-control", style = "width: 150px;", onChange = "fieldChanged(Customer);" })
+                    </td>
+                    
+                    <td valign="top">
+                        @Html.LabelFor(model => model.ProjectedTotal)
+                        @Html.TextBoxFor(model => model.ProjectedTotal, "{0:C}", new { disabled = "disabled", style = "width: 150px; border:0;" })
+                    </td>
+                    <td valign="top">
+                        @Html.LabelFor(model => model.pct_complete)
+                        @Html.TextBoxFor(model => model.pct_complete, new { disabled = "disabled", style = "width: 150px; border:0;" })
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        @Html.LabelFor(model => model.ActualStart)
+                        @Html.TextBoxFor(model => model.ActualStart, "{0:MM/dd/yyyy}", ViewBag.ActualStartDisabled ? (object)new {  id ="ActualStart", disabled = "disabled", style = "width:150px" } : new { @class = "form-control", style = "width: 150px;", onChange = "dateFieldChanged(ActualStart);" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ActualEnd)
+                        @Html.TextBoxFor(model => model.ActualEnd, "{0:MM/dd/yyyy}", ViewBag.ActualEndDisabled ? (object)new {  id = "ActualEnd", disabled = "disabled", style = "width:150px" } : new { @class = "form-control", style = "width: 150px;", onChange = "dateFieldChanged(ActualEnd);" })
+                    </td>
+                    <td></td>
+                    <td valign="top">
+                        @Html.LabelFor(model => model.ActualTotal, new  { style = "width:110px" })
+                        @Html.TextBoxFor(model => model.ActualTotal, "{0:C}", new { disabled = "disabled", style = "width: 150px; border:0;" })
+                    </td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="5">
+                        <label>Comment</label> 
+                        @Html.TextAreaFor(model => model.Comments, ViewBag.CommentsDisabled ? (object)new { id = "Comments", disabled = "disabled", style = "width:1250px" } : new { rows = 4, style = "width: 1250px;", onChange = "fieldChanged(Comments);" })
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="5">
+                        @Html.LabelFor(model => model.ProjectGroup)
+                        @Html.DropDownListFor(model => model.ProjectGroup.GroupId, Model.GroupList, ViewBag.GroupsDisabled ? (object)new { id = "ProjectGroup", disabled = "disabled", style = "width:1250px" } : new { @class = "form-control", id = "ProjectGroup", style = "width: 1250px;"})
+                    </td>
+                </tr>
+
+                <tr>
+                    <td colspan="5">
+                        <div style="padding:3px;">
+                            <label>Assigned Groups</label>
+                        </div>
+                        <div id="projectGroupsDiv" style="width: 1250px;border:solid 1px #e2e2e2;min-height:35px;">
+                            @{
+                          int y = Model.ProjectGroupList.Count;
+                          for (var i = 0; i < y; i++)
+                          {
+                              string g = "group" + @Model.ProjectGroupListIndex[i];
+                            <div id='@g' style="padding-left:6px;"><div style="float:left;margin-right:15px;cursor:pointer;"><img src="/Probe/Images/delete.png" alt="Delete" class="deleteGroup"></div><div style="float:left;">@Model.ProjectGroupList[i]</div><div style="clear:both;"></div></div>
+                          }
+                            }
+                        </div>
+                    </td>
+                </tr>
+
+            </table><br />
+        }
+
+    <div id="dialog-message"></div>
+
+
+
+
+
+
+    @* Updates Section *@
+    <div class="ui-corner-all table-div-100">
+
+        <table>
+            <tr>
+                <td><label class="label" style="color:#000;">Updates</label>&nbsp;<img id="addUpdateBtn" src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="AddUpdate('@ViewBag.UserDisplayName');" /></td>
+            </tr>
+            <tr>
+                @*<td style="vertical-align:text-top;"><table><tr><td style="text-align:center;"><label class="label">Updates</label></td></tr><tr><td style="text-align:center;"><img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="AddUpdate('@ViewBag.UserDisplayName');" /></td></tr></table></td>*@
+                <td style="width:auto;">
+                    <div class="ui-corner-all" style="max-height:150px;width:auto;overflow-y:auto;overflow-x:hidden;">
+                        <table class="projInfoUpdateTable">
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th>Date Created</th>
+                                <th>Explanation</th>
+                                <th>Owner</th>
+                            </tr>
+                            @{
+                                if (updatelist.Count() > 0)
+                                {
+                                    foreach (var updt in updatelist)
+                                    {
+                                        string x = updt.Explanation.Replace("\"", "&quot;"); 
+                                        
+                                        <tr>
+                                            <td><img src='~/Images/delete.png' alt='Delete' class='btnDelete' style="cursor:pointer;" onclick="DeleteUpdate('@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(updt.ProjectUpdateId)))');" /></td>
+                                            <td><img src='~/Images/pencil.png' alt='Edit' class='btnEdit' style="cursor:pointer;" onclick="EditUpdate('@Html.Raw(HttpUtility.JavaScriptStringEncode(x))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(updt.UpdateOwner))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(updt.UpdateOwnerId)))','@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(updt.ProjectUpdateId)))');" /></td>
+                                            <td><img src='~/Images/zoom.png' alt='View' class='btnView' style="cursor:pointer;" onclick="ViewUpdate('@Html.Raw(HttpUtility.JavaScriptStringEncode(x))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(updt.UpdateOwner))');" /></td>
+                                            <td><div class="updates" style="width:130px;" id="updateCreateDt">@updt.createDt</div></td>
+                                            <td><div class="updates" style="width:620px;">@updt.Explanation</div></td>
+                                            <td><div class="updates" style="width:110px;" id="updateOwner">@updt.UpdateOwner</div></td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td><img src='~/Images/delete.png' alt='Delete' class='btnDelete' /></td>
+                                        <td><img src='~/Images/pencil.png' alt='Edit' class='btnEdit' /></td>
+                                        <td><img src='~/Images/zoom.png' alt='View' class='btnView' /></td>
+                                        <td><div class="updates" style="width:130px;" id="updateCreateDt"></div></td>
+                                        <td><div class="updates" style="width:620px;"></div></td>
+                                        <td><div class="updates" style="width:115px;" id="updateOwner"></div></td>
+                                    </tr>
+                                }
+                            }
+                        </table>
+                    </div>
+                </td>
+            </tr>
+
+
+        </table>
+
+
+    </div>
+    @* End Updates Section *@
+
+    @* Issues Section *@
+    <div class="ui-corner-all table-div-100">
+
+        <table>
+            <tr>
+                <td><label class="label" style="color:#000;">Issues</label>&nbsp;<img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="AddIssue();" /></td>
+            </tr>
+            <tr>
+                @*<td style="vertical-align:text-top;"><table><tr><td style="text-align:center;"><label class="label">Issues</label></td></tr><tr><td style="text-align:center;"><img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="AddIssue();" /></td></tr></table></td>*@
+
+                <td>
+                    <div class="ui-corner-all" style="max-height:150px;width:auto;overflow-y:auto;overflow-x:hidden;">
+                        <table class="projInfoUpdateTable">
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th>Date Created</th>
+                                <th>Explanation</th>
+                                <th>Owner</th>
+                                <th>Status</th>
+                            </tr>
+                            @{
+                                if (issueList.Count() > 0)
+                                {
+                                    foreach (var iss in issueList)
+                                    {
+                                        string exp = iss.Explanation.Replace("\"", "&quot;");
+                                        string res = iss.Resolution.Replace("\"", "&quot;");
+                                        <tr>
+                                            <td><img src='~/Images/delete.png' alt='Delete' class='btnDelete' style="cursor:pointer;" onclick="DeleteIssue('@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(iss.ProjectIssueId)))')" /></td>
+                                            <td><img src='~/Images/pencil.png' alt='Edit' class='btnEdit' style="cursor:pointer;" onclick="EditIssue('@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(iss.ProjectIssueId)))','@Html.Raw(HttpUtility.JavaScriptStringEncode(exp))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(iss.IssueOwner))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(iss.IssueOwnerUserName))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(iss.IssueStatus))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(iss.TargetDate)))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(res))');" /></td>
+                                            <td><img src='~/Images/zoom.png' alt='View' class='btnView' style="cursor:pointer;" onclick="ViewIssue('@Html.Raw(HttpUtility.JavaScriptStringEncode(exp))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(iss.IssueOwner))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(iss.IssueStatus))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(iss.TargetDate)))', '@Html.Raw(HttpUtility.JavaScriptStringEncode(res))');" /></td>
+                                            <td><div class="updates" style="width:130px;" id="issueCreateDt">@iss.createDt</div></td>
+                                            <td><div class="updates" style="width:520px;">@iss.Explanation</div></td>
+                                            <td><div class="updates" style="width:110px;" id="issueOwner">@iss.IssueOwner</div></td>
+                                            <td><div class="updates" style="width:75px;" id="issueStatus">@iss.IssueStatus</div></td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td><img src='~/Images/delete.png' alt='Delete' class='btnDelete' /></td>
+                                        <td><img src='~/Images/pencil.png' alt='Edit' class='btnEdit' /></td>
+                                        <td><img src='~/Images/zoom.png' alt='View' class='btnView' /></td>
+                                        <td><div class="updates" style="width:130px;" id="issueCreateDt"></div></td>
+                                        <td><div class="updates" style="width:520px;"></div></td>
+                                        <td><div class="updates" style="width:115px;" id="issueOwner"></div></td>
+                                        <td><div class="updates" style="width:75px;" id="issueStatus"></div></td>
+                                    </tr>
+                                }
+                            }
+                        </table>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+
+    </div>
+    @* End Issues Section *@
+
+
+
+    @* Attachments Section *@
+    <div class="ui-corner-all table-div-100">
+
+        <table >
+            <tr>
+                <td><label class="label" style="color:#000;">Attachments</label>&nbsp;<img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="toggleUploadDiv();" /></td>
+
+            </tr>
+            <tr>
+                @*<td style="vertical-align:text-top;"><table><tr><td style="text-align:center;"><label class="label">Attachments</label></td></tr><tr><td style="text-align:center;"><img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="toggleUploadDiv();" /></td></tr></table></td>*@
+
+                <td>
+                    <div class="ui-corner-all" style="max-height:150px;width:auto;overflow-y:auto;overflow-x:hidden;">
+                        <div id="uploadDiv" style="display:none;">
+                            @using (@Html.BeginForm("addAttachment", "Home", FormMethod.Post, new { enctype = "multipart/form-data", id="form1" }))
+                            {
+                                <fieldset>
+                                    <input type="hidden" name="projectId" id="projectId" value="@Model.ProjectId" />
+                                    <input type="hidden" name="projectId2" id="projectId2" value="" />
+                                    
+                                    <div id="attachGroups" style="padding:4px;">
+                                        
+
+                                    </div>
+                                    <input type="file" name="uploadFile" id="uploadFile" />
+                                    <input type="button" name="uploadBtn" value="Upload" id="uploadBtn" />
+                                </fieldset>
+                            }
+                        </div>
+                        <table class="projInfoUpdateTable" id="attachmentList">
+                        </table>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+    @* End Attachments Section*@
+
+    @*Contributors Section*@
+    <div id="contributors" class="ui-corner-all table-div-100">
+
+        <table>
+            <tr>
+                <td style="vertical-align:central;"><label class="label" style="color:#000;">Contributors</label>&nbsp;<img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="AddContributor();" /></td>
+
+            </tr>
+            <tr>
+                @*<td style="vertical-align:text-top;"><table><tr><td style="text-align:center;"><label class="label">Contributors</label></td></tr><tr><td style="text-align:center;"><img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="AddContributor();" /></td></tr></table></td>*@
+                <td style="width:auto;">
+                    <div class="ui-corner-all" style="max-height:150px;width:400px;overflow-y:auto;overflow-x:hidden;">
+                        <table class="projInfoUpdateTable">
+                            <tr>
+                                <th id="delePngHeader"></th>
+                                <th>Date Created</th>
+                                <th>Contributor</th>
+                            </tr>
+                            @{
+        if (contributors.Count() > 0)
+        {
+            foreach (var x in contributors)
+            {
+                <tr>
+                    <td id="delePng"><img src='~/Images/delete.png' alt='Delete' class='btnDelete' style="cursor:pointer;" onclick="DeleteContributor('@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(x.UserId)))');" /></td>
+                    <td><div class="updates" style="width:130px;" id="CreateDt">@x.createDt</div></td>
+                    <td><div class="updates" style="width:180px;">@x.DisplayName</div></td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td id="delePng"><img src='~/Images/delete.png' alt='Delete' class='btnDelete' /></td>
+                <td><div class="updates" style="width:130px;" id="CreateDt"></div></td>
+                <td><div class="updates" style="width:180px;"></div></td>
+            </tr>
+        }
+                            }
+                        </table>
+
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+
+
+    
+    @*End Contributors Section*@
+
+   <script>
+
+
+
+
+
+       $("#uploadBtn").on("click",function(){
+           $("#dialog-message").dialog({
+               width: 300,
+               modal: true
+           })
+           $("#dialog-message").dialog('option','title','Adding attachment....')
+           $("#dialog-message").css({"width":"120px","margin":"auto","height":"120px"});
+           $(".ui-dialog-buttonset").hide();
+           document.getElementById('dialog-message').innerHTML = "<div class='loader'></div>"
+           var val1=$('input[name=attachmentGroupIds]:checked').val();
+           $("#projectId2").val(val1);
+           $("#form1").submit();
+       })
+
+       $(function () {
+
+           projId = @Model.ProjectId;
+           projName = '@Model.ProjectName';
+
+           UpdProjInfoUrl = '@Url.Action("UpdateProjectInfo","Home")';
+           ReconcileDatesUrl = '@Url.Action("ReconcileProjectDates", "Home")';
+           addUpdateUrl = '@Url.Action("addUpdate", "Home")';
+           changeUpdateUrl = '@Url.Action("changeUpdate", "Home")';
+           deleteUpdateUrl ='@Url.Action("deleteUpdate", "Home")';
+           addIssueUrl = '@Url.Action("addIssue", "Home")';
+           changeIssueUrl = '@Url.Action("changeIssue", "Home")';
+           deleteIssueUrl = '@Url.Action("deleteIssue", "Home")';
+           deleteAttachUrl = '@Url.Action("deleteAttachment", "Home")';
+           addContribUrl = '@Url.Action("addContributor", "Home")';
+           deleteContribUrl = '@Url.Action("deleteContributor", "Home")';
+
+           mgrList = @Html.Raw(Json.Encode(Model.ManagerList));
+           contribList = @Html.Raw(Json.Encode(Model.ContributorList));
+           userName = '@ViewBag.UserName';
+
+           if(@ViewBag.CrudDisabled == true)
+           {
+               if(@ViewBag.HideContributors == true){
+                   //$("#contributors").hide();
+                   $("#delePng").empty();
+
+               }
+               $(".btnAdd").hide();
+               $(".btnEdit").prop('disabled', true);
+               $(".btnDelete").prop('disabled', true);
+           }
+
+           var end = $("#ActualEnd").val();
+
+           if(end == "")
+           {
+               end = "+10y";
+           }
+
+           var start = $("#ActualStart").val();
+
+           if(start == "")
+           {
+               start = "-3y";
+           }
+
+           $("#ActualStart").datepicker({
+               defaultDate: "+1w",
+               changeMonth: true,
+               numberOfMonths: 3,
+               maxDate: end,
+               onClose: function (selectedDate) {
+                   $("#ActualEnd").datepicker("option", "minDate", selectedDate);
+               }
+           });
+           $("#ActualEnd").datepicker({
+               defaultDate: "+1w",
+               changeMonth: true,
+               numberOfMonths: 3,
+               minDate: start,
+               maxDate: "+0d",
+               onClose: function (selectedDate) {
+                   $("#ActualStart").datepicker("option", "maxDate", selectedDate);
+               }
+           });
+
+
+           $("#warrantyAgreementDate").datepicker({
+               defaultDate: "+1w",
+               changeMonth: true,
+               numberOfMonths: 3,
+               onClose: function (selectedDate) {
+                   $("#Expiration").datepicker("option", "minDate", selectedDate);
+               }
+           });
+
+
+       });
+
+       chk="false";
+       $(document).ready(function(){
+
+           var disp='@Model.Display_Project_Info';
+           if(disp=="Y"){
+               $("#display").prop("checked","checked")
+           }
+
+           var TA='@Model.TerminateServiceAgreementAlert';
+
+           if(TA){
+               if(TA=='True'){
+                   $("#TerminateServiceAgreementAlert").prop("checked","checked")
+                }else{
+                   $("#TerminateServiceAgreementAlert").prop("checked",false)
+               }
+           }else{
+               $("#TerminateServiceAgreementAlert").prop("checked",false)
+           }
+
+
+
+           $("#ProjectGroup").bind("change",function(){
+               checkGroup(this)
+           })
+
+           var WA=$("#warrantyAgreement").val();
+           if(WA!="Unknown"){
+               $("#expirDiv").show();
+               $("#vendDiv").show();
+               $("#termDiv").show();
+           }else{
+               $("#expirDiv").hide();
+               $("#vendDiv").hide();
+               $("#termDiv").hide();
+           }
+
+           chk='@ViewBag.DeletesDisabled';
+           if(chk=="False"){
+               addDeleteHandlers();
+           }else{
+               $(".deleteGroup").each(function(){
+                   $(this).on("click",function(){
+                       //alert("You do not have permission to edit this field");
+                   })
+               })
+           }
+
+           var vendID='@Model.ServiceAgreementVendorId';
+           if(vendID!=""){
+               var vendID1=parseInt(vendID);
+               $("#ServiceAgreementVendorId").val(vendID1)
+           }else{
+
+           }
+
+       })
+
+       function checkGroup(obj){
+           var str=$(obj).val();
+           str=str.substr(2);
+           str=parseInt(str);
+           model={};
+           model.GroupId=str;
+           model.ProjectId=@ViewBag.pid;
+           model.txt=$(obj).find("option:selected").text();
+           var dropModel=[];
+           var i=0;
+           $(obj).find("option").each(function(){
+               dropModel[i]={}
+               dropModel[i].txt=$(this).text();
+               dropModel[i].val=$(this).val()
+               i=i+1;
+           })
+
+
+
+           var idx=dropModel.length;
+           var newModel=[];
+           for(b=0;b<idx;b++){
+               if(dropModel[b].txt!=model.txt){
+                   newModel.push(dropModel[b])
+               }
+           }
+           var idx1=newModel.length;
+           $("#ProjectGroup").unbind("change");
+           $("#ProjectGroup").empty()
+
+           for(c=0;c<idx1;c++){
+               var select="";
+               if(newModel[c].val=="LG"){
+                   select="selected"
+               }
+
+               $("#ProjectGroup").append("<option value='"+newModel[c].val+"' "+select+">"+newModel[c].txt+"</option>");
+           }
+           $("#projectGroupsDiv").focus();
+           $("#ProjectGroup").bind("change",function(){
+               checkGroup(this);
+           })
+           $.ajax({
+               url: "/Probe/Home/UpdateGroupData",
+               type: "POST",
+               data: model,
+               async: false
+               //dataType: "json"
+           }).success(function(data) {
+               var id1="group"+model.GroupId;
+               $("#projectGroupsDiv").append("<div id='"+id1+"' style='padding-left:6px;'><div style='float:left;margin-right:15px;cursor:pointer;'><img src='/Probe/Images/delete.png' alt='Delete' class='deleteGroup'></div><div style='float:left;'>"+model.txt+"</div><div style='clear:both;'></div></div>");
+               addDeleteHandlers();
+           }).error(function (msg) {
+               alert("There was an error while making a group update.");;
+           });
+
+
+       }
+
+       function addDeleteHandlers(){
+
+           $(".deleteGroup").each(function(){
+               $(this).unbind("click");
+               $(this).on("click",function(){
+                   var confirm2=confirm("Remove this group from the project?");
+                   if(confirm2==true){
+                       GroupId=$(this).parent().parent().attr("id")+"";
+                       GroupId=GroupId.substr(5);
+                       var str= "/Probe/Home/DeleteProjectData";
+                       myData={};
+                       myData.data="hello";
+                       myData.GroupId=GroupId;
+                       myData.ProjectId=@ViewBag.pid;
+
+                       _this=this;
+                       $.ajax({
+                           type: 'POST',
+                           url: str,
+                           data: myData,
+                           async: false
+                       }).success(function (msg) {
+                           var mil=[]
+                           var optionId=$(_this).parent().parent().attr("id");
+                           optionId=optionId.substr(5);
+                           var selectGroup;
+                           var selectID;
+                           $("[id^=group]").each(function(){
+                               var OptId=$(this).attr("id")+"";
+
+                               OptId=OptId.substr(5)
+                               if(OptId==optionId){
+                                   selectGroup=$(this).children().eq(1).html();
+                                   selectID=$(this).attr("id");
+                                   selectID="LG"+selectID.substr(5)
+                               }else{
+                                   mil.push($(this)[0]);
+                               }
+
+                           });
+
+                           $("#projectGroupsDiv").empty();
+                           addDeleteHandlers();
+                           var ini= mil.length;
+                           for(d=0;d<ini;d++){
+                               $("#projectGroupsDiv").append(mil[d])
+                           }
+
+                           $("#ProjectGroup").append("<option value='"+selectID+"'>"+selectGroup+"</option>")
+                           addDeleteHandlers()
+
+                       })
+                   }else{
+
+                   }
+
+               })
+           })
+
+       }
+
+
+
+
+
+
+
+
+       //displayAttachments(projectAttachments)
+
+
+       function editAttachGroup(obj){
+           var adaptor=$(obj).attr("id")+"";
+           var adaptorIndx=adaptor.split("**");
+           var str= "/Probe/Home/UpdateProjectAttachment";
+           var mod={}
+           mod.ProjectAttachmentId=adaptorIndx[1];
+           mod.ProjectId=@ViewBag.pid;
+           mod.updateBy='@ViewBag.UserName';
+           var adaptor1=adaptor.split("**")
+           $("#dialog-message").dialog({
+               width: 600,
+               modal: true,
+               buttons: {
+                   "Update": function () {
+                       var val=$('input[name=editAttachmentGroup]:checked').val();
+                       mod.AttachmentGroupId=val;
+                       $.ajax({
+                           type: 'POST',
+                           url: str,
+                           data: mod,
+                           async: false
+                       }).success(function (msg) {
+                           var projId = @Model.ProjectId;
+                           location.href="/Probe/Home/SelectedProject/"+projId;
+                       })
+                   }
+               }
+           })
+
+
+
+           $('#dialog-message').dialog('option', 'title', 'Edit Attachment group');
+
+           var aGrpLeng=attachmentGroups.length;
+           var strg1="";
+           for(g=0;g<aGrpLeng;g++){
+               var sel="";
+               if(adaptorIndx[2]==attachmentGroups[g].AttachmentGroupName){
+                   sel="checked";
+               }
+               strg1=strg1+"<div><span style='display:inline-block;width:120px;'>"+attachmentGroups[g].AttachmentGroupName+"</span><span><input type='radio' name='editAttachmentGroup' value='"+attachmentGroups[g].AttachmentGroupId+"' "+sel+"/></span><div></div></div>"
+               sel="";
+           }
+
+           document.getElementById('dialog-message').innerHTML = strg1;
+       }
+
+
+
+
+       //Load update window
+       var aGrpLeng=attachmentGroups.length;
+
+
+
+       $("#attachGroups").empty()
+       for(g=0;g<aGrpLeng;g++){
+           var strg="<div><span style='display:inline-block;width:120px;'>"+attachmentGroups[g].AttachmentGroupName+"</span><span><input type='radio' name='attachmentGroupIds' value='"+attachmentGroups[g].AttachmentGroupId+"' /></span><div></div></div>"
+           $("#attachGroups").append(strg)
+       }
+
+
+       function displayAttachments(obj2){
+
+           var length1 = projectAttachments.length;
+           var agroup=[];
+           var iLeng=attachmentGroups.length;
+           for(b=0;b<iLeng;b++){
+               attachmentGroups[b].elem=[];
+               agroup[attachmentGroups[b].AttachmentGroupId]=(attachmentGroups[b]);
+           }
+
+           var aStrg1="";
+           var f3=agroup.length;
+
+           for(i=0;i<f3;i++){
+               if(agroup[i]){
+                   if(agroup[i].elem.length>0){
+                       var e=agroup[i].elem.length;
+                       aStrg1=aStrg1+"<tr><th colspan='4' style='text-align:left;' ><div style='margin-left:3px;'>"+agroup[i].AttachmentGroupName+"</div></th><th>Date Created</th><th>Title</th><th>Group</th><th>File Type</th></tr>"
+                       for(j=0;j<e;j++){
+                           aStrg1=aStrg1+"<tr>"+agroup[i].elem[j]+"</tr>";
+                       }
+                   }
+               }
+           }
+
+           var length1 = obj2.length;
+           var agroup=[];
+           var iLeng=attachmentGroups.length;
+
+           for(b=0;b<iLeng;b++){
+               attachmentGroups[b].elem=[];
+               agroup[attachmentGroups[b].AttachmentGroupId]=(attachmentGroups[b]);
+           }
+
+           var strg1="<tr ><th></th><th></th><th></th><th style='text-align:center;' >Date Created</th><th>Title</th><th>Group</th><th>File Type</th></tr>";
+           var strg="";
+           for (t1=0;t1< length1;t1++)
+           {
+               strg="";
+               var fer=obj2[t1].AttachmentTitle+"**"+obj2[t1].ProjectAttachmentId+"**"+obj2[t1].AttachmentGroupName;
+               var e1=obj2[t1].AttachmentTitle;
+               strg=strg+"<tr><td><img src='/Probe/Images/delete.png' alt='Delete' class='btnDelete' style='cursor:pointer;' onclick='DeleteAttachment("+obj2[t1].ProjectAttachmentId+")' /></td>"
+               strg=strg+"<td><img src='/Probe/Images/pencil.png' alt='Edit' id='"+fer+"' class='btnEdit' style='cursor:pointer;' onclick=editAttachGroup(this)></td>"
+               strg=strg+"<td><a class='imageButton' href='/Probe/Home/viewAttachment?attachmentId="+obj2[t1].ProjectAttachmentId+"'>View</a></td>"
+               strg=strg+"<td style='width:100px;'></td>";
+               var d= new Date(obj2[t1].createdDt)
+               var n = d.toLocaleString();
+               strg=strg+"<td><div class='updates'  id='attachmentCreateDate'>"+n+"</div></td>"
+               strg=strg+"<td><div class='updates ' style='width:350px;' id='attachmentTitle'>"+obj2[t1].AttachmentGroupTitle+"</div></td>"
+               strg=strg+"<td><div class='updates' >"+obj2[t1].AttachmentGroupName+"</div></td>"
+               strg=strg+"<td><div style='width: 100px;' class='updates' >"+obj2[t1].FileType+"</div></td></tr>";
+               agroup[obj2[t1].AttachmentGroupId]['elem'].push(strg);
+
+           }
+
+           var aStrg1="";
+           var f3=agroup.length;
+
+           for(i=0;i<f3;i++){
+               if(agroup[i]){
+                   if(agroup[i].elem.length>0){
+                       var e=agroup[i].elem.length;
+                       aStrg1=aStrg1+"<tr><th colspan='4' style='text-align:left;' ><div style='margin-left:3px;'>"+agroup[i].AttachmentGroupName+"</div></th><th>Date Created</th><th>Title</th><th>Group</th><th>File Type</th></tr>"
+                       for(j=0;j<e;j++){
+                           aStrg1=aStrg1+"<tr>"+agroup[i].elem[j]+"</tr>";
+                       }
+                   }
+               }
+           }
+           $("#attachmentList").empty().append(aStrg1);
+       }
+
+
+       function updateDisplay(obj){
+           $y=$(obj);
+
+           var model={};
+           model.ProjectId=@ViewBag.pid;
+           model.ConfigType="Display Project Info";
+
+           model.updateBy='@ViewBag.UserName';
+
+           
+           url="/Probe/Home/updateDisplay";
+
+
+           if($y.prop("checked")==true){
+               model.ConfigValue="Yes";
+           }
+
+
+           if($y.prop("checked")==false){
+               model.ConfigValue="No";
+           }
+
+
+
+           $.ajax({
+               type: 'POST',
+               url: url,
+               data: model,
+               async: false
+           }).success(function (msg) {
+
+
+           })
+       }
+
+       var length1 = projectAttachments.length;
+       var agroup=[];
+       var iLeng=attachmentGroups.length;
+
+       for(b=0;b<iLeng;b++){
+           attachmentGroups[b].elem=[];
+           agroup[attachmentGroups[b].AttachmentGroupId]=(attachmentGroups[b]);
+       }
+       var strg1="<tr ><th></th><th></th><th></th><th style='text-align:center;' >Date Created</th><th>Title</th><th>Group</th><th>File Type</th></tr>";
+       var strg="";
+       for (t1=0;t1< length1;t1++)
+       {
+           strg="";
+           var id=0;
+
+           var iLeng=attachmentGroups.length;
+
+           for(b=0;b<iLeng;b++){
+               if(attachmentGroups[b].AttachmentGroupName==projectAttachments[t1].AttachmentGroupName){
+                   id=attachmentGroups[b].AttachmentGroupId;
+               }
+           }
+
+
+
+
+           var fer=projectAttachments[t1].AttachmentTitle+"**"+projectAttachments[t1].ProjectAttachmentId+"**"+projectAttachments[t1].AttachmentGroupName+"**"+id;
+           var e1=projectAttachments[t1].AttachmentTitle;
+           strg=strg+"<tr><td><img src='/Probe/Images/delete.png' alt='Delete' class='btnDelete' style='cursor:pointer;' onclick='DeleteAttachment("+projectAttachments[t1].ProjectAttachmentId+")' /></td>"
+           strg=strg+"<td><img src='/Probe/Images/pencil.png' alt='Edit' id='"+fer+"' class='btnEdit' style='cursor:pointer;' onclick=editAttachGroup(this)></td>"
+           strg=strg+"<td><a class='imageButton' href='/Probe/Home/viewAttachment?attachmentId="+projectAttachments[t1].ProjectAttachmentId+"'>View</a></td>"
+           strg=strg+"<td style='width:100px;'></td>";
+           var d= new Date(projectAttachments[t1].createdDt)
+           var n = d.toLocaleString();
+           strg=strg+"<td><div class='updates'  id='attachmentCreateDate'>"+n+"</div></td>"
+           strg=strg+"<td><div class='updates' style='width:350px;' id='attachmentTitle' >"+projectAttachments[t1].AttachmentTitle+"</div></td>"
+           strg=strg+"<td><div class='updates' style='width:120px;'   >"+projectAttachments[t1].AttachmentGroupName+"</div></td>"
+
+           strg=strg+"<td><div class='updates' style='width:100px;' >"+projectAttachments[t1].FileType+"</div></td></tr>";
+           agroup[projectAttachments[t1].AttachmentGroupId]['elem'].push(strg);
+       }
+
+
+       var aStrg1="";
+       var f3=agroup.length;
+       for(i=0;i<f3;i++){
+           if(agroup[i]){
+               if(agroup[i].elem.length>0){
+                   var e=agroup[i].elem.length;
+                   aStrg1=aStrg1+"<tr><th colspan='4' style='text-align:left;' ><div style='margin-left:3px;'>"+agroup[i].AttachmentGroupName+"</div></th><th>Date Created</th><th>Title</th><th>Group</th><th>File Type</th></tr>"
+                   for(j=0;j<e;j++){
+                       aStrg1=aStrg1+"<tr>"+agroup[i].elem[j]+"</tr>";
+                   }
+               }
+           }
+       }
+       $("#attachmentList").append(aStrg1)
+
+
+
+
+
+
+
+
+
+
+
+
+   </script>
+
+    }
+    catch (Exception ex)
+    {
+        <h3>@ex.Message</h3>
+    }
+
+
+}

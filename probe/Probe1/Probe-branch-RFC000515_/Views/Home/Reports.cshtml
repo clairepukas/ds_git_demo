@@ -1,0 +1,117 @@
+﻿@{
+    Layout = "~/Views/Shared/_SiteLayout.cshtml";
+    Page.Title = "Reports";
+    <link href="~/Content/Probe.css" rel="stylesheet" />
+    <link href="~/Content/themes/overcast/jquery-ui.css" rel="stylesheet" />
+}
+<br />
+
+<p><span style="font-size: 14pt;font-weight:500;">Reports</span></p>
+
+@*<div id="accordion">
+    <h3>PgMO Reports</h3>
+    <div>
+        <p>
+            <div style="width:200px;">
+                <input type="button" class="rptBtn" value="Project Information Report" onclick="javascript: DisplayReport(this)" /><br />
+                <input type="button" class="rptBtn" value="Project Budgets Report" onclick="javascript: DisplayReport(this)" /><br />
+                <input type="button" class="rptBtn" value="Project Benefits Report" onclick="javascript: DisplayReport(this)" /><br />
+                <input type="button" class="rptBtn" value="Project Resources Report" onclick="javascript: DisplayReport(this)" /><br />
+            </div>
+        </p>
+    </div>
+    <h3>General Reports</h3>
+    <div>
+        <p>
+            <div style="width:200px;">
+                <input type="button" class="rptBtn" value="Project Information By Year and Project Manager" onclick="javascript: DisplayReport(this)" /><br />
+                <input type="button" class="rptBtn" value="Project Information By Year and Project Engineer" onclick="javascript: DisplayReport(this)" /><br />
+            </div>
+        </p>
+    </div>
+    <h3>Department Reports</h3>
+    <div>
+        <p>
+            <div style="width:200px;">
+                <input type="button" class="rptBtn" value="Project Resources By Year and Resource Group" onclick="javascript: DisplayReport(this)" /><br />
+                <input type="button" class="rptBtn" value="Project Information By Year and Department" onclick="javascript: DisplayReport(this)" /><br />
+            </div>
+        </p>
+    </div>
+    <h3>Executive Reports</h3>
+    <div>
+        <p>
+            <div style="width:200px;">
+                <input type="button" class="rptBtn" value="Project Budgets By Project and Year" onclick="javascript: DisplayReport(this)" /><br />
+                <input type="button" class="rptBtn" value="Budgets Totals By Year" onclick="javascript: DisplayReport(this)" /><br />
+            </div>
+        </p>
+    </div>
+
+    @if (ViewBag.IsAdmin)
+    {
+        <h3>Admin Reports</h3>
+        <div>
+            <p>
+                <div style="width:200px;">
+                    <input type="button" class="rptBtn" value="Overdue Status Update Report" onclick="javascript: DisplayReport(this)" />
+                </div>
+            </p>
+        </div>
+    }
+</div>*@
+
+<div class="ui-corner-all rptDiv">
+    <h4>PgMO Reports</h4><br />
+    <input type="button" class="rptBtn" value="Project Information Report" onclick="javascript: DisplayReport(this)"/>
+    <input type="button" class="rptBtn" value="Project Budgets Report" onclick="javascript: DisplayReport(this)" />
+    <input type="button" class="rptBtn" value="Project Benefits Report" onclick="javascript: DisplayReport(this)" />
+    <input type="button" class="rptBtn" value="Project Resources Report" onclick="javascript: DisplayReport(this)" />
+</div>
+
+<div class="ui-corner-all rptDiv">
+    <h4>General Reports</h4><br />
+    <input type="button" class="rptBtn" value="Project Information By Year and Project Manager" onclick="javascript: DisplayReport(this)" />
+    <input type="button" class="rptBtn" value="Project Information By Year and Project Engineer" onclick="javascript: DisplayReport(this)" />
+    <input type="button" class="rptBtn" value="Project Information By Year and Project Group" onclick="javascript: DisplayReport(this)" />
+</div>
+
+<div class="ui-corner-all rptDiv">
+    <h4>Department Reports</h4><br />
+    <input type="button" class="rptBtn" value="Project Resources By Year and Resource Group" onclick="javascript: DisplayReport(this)" />
+    <input type="button" class="rptBtn" value="Project Information By Year and Department" onclick="javascript: DisplayReport(this)" />
+</div>
+
+<div class="ui-corner-all rptDiv">
+    <h4>Executive Reports</h4><br />
+    <input type="button" class="rptBtn" value="Project Budgets By Project and Year" onclick="javascript: DisplayReport(this)" />
+    <input type="button" class="rptBtn" value="Budgets Totals By Year" onclick="javascript: DisplayReport(this)" />
+</div>
+
+@if (ViewBag.IsAdmin)
+{
+    <div class="ui-corner-all rptDiv">
+        <h4>Admin Reports</h4><br />
+        <input type="button" class="rptBtn" value="Status Update Report" onclick="javascript: DisplayReport(this)" />
+    </div>
+}
+
+<script>
+    $(function () {
+        $("#accordion").accordion({
+            collapsible: true,
+            heightStyle: "content",
+            active: false
+        });
+    });
+
+    $(function () {
+        $(".rptBtn")
+          .button()
+          .click(function (event) {
+              event.preventDefault();
+          });
+    });
+</script>
+
+

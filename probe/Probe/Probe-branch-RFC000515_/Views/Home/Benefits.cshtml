@@ -1,0 +1,44 @@
+﻿@{
+    <link href="~/Content/Probe.css?rfrsh=true" rel="stylesheet" />
+    <script src="~/Scripts/ProbeScripts/probe.js?rfrsh=true"></script>
+}
+
+@*<div id="DynamicContent" style="font-size:small">
+    <p>@Html.Raw(ViewBag.DynamicBenefits)</p>
+</div>*@
+
+
+
+<div class="vertScrollOnly" style="font-size:smaller">
+    @Html.Raw(ViewBag.DynamicBenefits)
+</div>
+
+<script type="text/javascript">
+
+    //if (!Modernizr.csscolumns) {
+    //    $(".colWrap2").columnize({ columns: 2, lastNeverTallest: true, buildOnce: true });
+    //    $(".colWrap3").columnize({
+    //        columns: 3,
+    //        lastNeverTallest: true,
+    //        buildOnce: true,
+    //        doneFunc: function () {
+    //            $("#tabs").css('visibility', 'visible');
+    //        }
+    //    });
+    //}
+
+    function isNumberKey(evt) {
+        var charCode = (evt.which) ? evt.which : event.keyCode;
+        if (charCode != 46 && charCode > 31
+          && (charCode < 48 || charCode > 57))
+            return false;
+        return true;
+    }
+
+    $('.currency').blur(function () {
+        $('.currency').formatCurrency();
+    });
+
+    DenyAccess('@ViewBag.Access');
+
+</script>

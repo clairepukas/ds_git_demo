@@ -1,0 +1,16 @@
+﻿@{
+    Layout = "~/Views/Shared/_ReportLayout.cshtml";
+    Page.Title = "Probe Report";
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-2.1.3.min.js"></script>
+    <script src="~/Scripts/ProbeScripts/ProbeRptFrame.js?rfrsh=true" type="text/javascript"></script>
+}
+
+<p class="site-title"><img src="~/Images/PROBE Header Slim.png" alt="PROBE Logo" /></p>
+<h3>@ViewBag.Title</h3><br />
+<div class="h_iframe">
+    <iframe id="rptfrm" src="~/RptVwr.aspx" frameborder="0" seamless="seamless" style="overflow-x:scroll;width:100%; height: 100%;background-color:white"></iframe>
+</div>
+
+
+

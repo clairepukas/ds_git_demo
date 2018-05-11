@@ -1,0 +1,62 @@
+﻿
+@{
+    Layout = Layout = "~/Views/Shared/_SiteLayout.cshtml";
+    Page.Title = "Probe - Resources Administration";
+
+    string divhtml = "";
+   
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Resources Admin</title>
+    <link href="~/Content/themes/base/all.css?rfrsh=true" rel="stylesheet" type="text/css" />
+
+    @*<link href="~/Content/themes/cupertino/jquery-ui-1.10.3.custom.css" rel="stylesheet" type="text/css">*@
+
+    <link href="~/Content/Site.css?rfrsh=true" rel="stylesheet" type="text/css" />
+    <link href="~/Content/Resources.css?rfrsh=true" rel="stylesheet" type="text/css" />
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    <script src="~/Scripts/jquery-2.1.3.js"></script>
+    <script src="~/Scripts/jquery-ui-1.11.2.js"></script>
+    <script src="~/Scripts/jquery.columnizer.js"></script>
+
+    <script src="~/Scripts/modernizr-2.6.2.js"></script>
+    <script src="~/Scripts/ProbeScripts/AdminResources.js?rfrsh=true"></script>
+
+    <meta name="viewport" content="width=device-width" />
+    <style>
+        .schedDateInput {
+            max-width: 100px;
+        }
+    </style>
+</head>
+<body>
+    @if (ViewBag.hasResourcesEdit)
+    {
+        <div class="title-wrap">
+            <h2>Resources Administration</h2>
+
+        </div>
+    <input id="searchTxt" class="ui-corner-all" style="display:inline;margin-left:10px;width:100px;" type="text" placeholder="Type to search.." value="@ViewBag.Filter" />
+    <span style="">Search all resources</span>
+        <div id="listDiv" class="listDiv">
+
+        </div>
+        <div id="dialog-modal">
+
+        </div>
+    }
+    else
+    {
+         <div class="msgDiv">
+             <p>
+                 You have not been given privilege to this option. <br /> If you feel you have received this message in error please contact the application administator.
+             </p>
+         </div>   
+    }
+
+</body>
+</html>

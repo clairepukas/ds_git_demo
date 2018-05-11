@@ -1,0 +1,239 @@
+﻿@model Probe.Models.NewProj
+
+@{
+    Layout = "~/Views/Shared/_SiteLayout.cshtml";
+    
+    Page.Title = "Create New Project";
+    <link href="~/Content/Probe.css" rel="stylesheet" />
+}
+<br />
+
+<h3>Create New Project</h3>
+<br />
+
+@if(ViewBag.hasRole)
+{
+    using (Html.BeginForm())
+    {
+        <fieldset>
+            <input id="hasRole" name="hasRole" type="hidden" value="@ViewBag.hasRole.ToString()" />
+            <table>
+                <tr>
+                    <td class="ui-corner-all" style="width:50%;height:300px;background-color:white;vertical-align:text-top; padding:5px">
+
+                        @Html.HiddenFor(model => model.updateBy)
+
+                        @Html.LabelFor(model => model.ProjectName,"Project Name")
+                        @Html.TextBoxFor(model => model.ProjectName, new { style = "width: 100%;maxlength:565;margin-bottom:10px;" })
+                        @{Html.ValidateFor(model => model.ProjectName);}
+                    
+                        <div style="float:left;">
+                            @Html.LabelFor(model => model.StartDate,"Start Date")
+                            @Html.TextBoxFor(model => model.StartDate, "{0:d}", new { style = "width: 240px;margin-bottom:15px;", contenteditable = false, id = "From" })
+                            @*@{Html.ValidateFor(model => model.StartDate);}*@
+                        </div>
+
+                        <div style="float:right;">
+                            @Html.LabelFor(model => model.EndDate,"End Date")
+                            @Html.TextBoxFor(model => model.EndDate, "{0:d}", new { style = "width: 240px;margin-bottom:15px;", contenteditable = false, id = "To" })
+                            @*@{Html.ValidateFor(model => model.EndDate);}*@
+                        </div>
+
+                        <div style="float:left;">
+                            @Html.LabelFor(model => model.Manager,"Project Manager")
+                            @Html.DropDownListFor(model => model.Manager, Model.Users, new { style = "width: 240px;margin:5px 0px 15px 0px;" })
+                            @{Html.ValidateFor(model => model.Manager);}
+                        </div>
+
+                        <div style="float:right;">
+                            @Html.LabelFor(model => model.Sponsor,"Project Sponsor")
+                            @Html.DropDownListFor(model => model.Sponsor, Model.Users, new { style = "width: 240px;margin:5px 0px 15px 0px;" })
+                            @{Html.ValidateFor(model => model.Sponsor);}
+                        </div>
+
+                        <div style="float:left;">
+                            @Html.LabelFor(model => model.Engineer,"Project Engineer")
+                            @Html.DropDownListFor(model => model.Engineer, Model.Users, new { style = "width: 240px;margin:5px 0px 15px 0px;" })
+                            @{Html.ValidateFor(model => model.Engineer);}
+                        </div>
+
+                        <div style="float:right;">
+                            @Html.LabelFor(model => model.Customer)
+                            @Html.DropDownListFor(model => model.Customer, Model.Customers, new { style = "width: 240px;margin:5px 0px 15px 0px;" })
+                            @{Html.ValidateFor(model => model.Customer);}
+                        </div>
+
+                        <div style="float:left;">
+                            @Html.LabelFor(model => model.Group)
+                            @Html.DropDownListFor(model => model.Group, Model.Groups, new { style = "width: 239px;margin:5px 0px 15px 0px;" })
+                            @{Html.ValidateFor(model => model.Group);}
+                        </div>
+
+                        <div style="float:right;">
+                            @Html.LabelFor(model => model.ProjectType,"Project Type")
+                            @Html.DropDownListFor(model => model.ProjectType, Model.ProjectTypes, new { style = "width: 239px;margin:5px 0px 15px 0px;" })
+                            @{Html.ValidateFor(model => model.ProjectType);}
+                        </div>
+
+                        <div style="float:left;" >
+                            @Html.LabelFor(model => model.BudgetNum,"Budget Number")
+                            @Html.TextBoxFor(model => model.BudgetNum, new { style = "width: 239px;contenteditable:false;", id = "From" })
+                            @{Html.ValidateFor(model => model.BudgetNum);}
+                        </div>
+                       
+
+                        <div style="float:right;">
+                            @Html.LabelFor(model => model.Agreements, "Service Agreements")
+                            @Html.DropDownListFor(model => model.Agreements, Model.Agreements, new { style = "width: 239px;margin:5px 0px 15px 0px;"  })
+                            @{Html.ValidateFor(model => model.Agreements);}
+                        </div>
+                        <div style="clear:both;"></div>
+                        <div style="float:left;display:none;" id="ExpirationDiv">
+                            @Html.LabelFor(model => model.ExpirationDate, "Agreement Expiration")
+                            @Html.TextBoxFor(model => model.ExpirationDate, "{0:d}", new { style = "width: 240px;margin-bottom:15px;", contenteditable = false, id = "Expiration" })
+                        </div>
+                        <div style="float:right;padding-top:15px">
+                            <input type="submit" id="btnSubmit" value="Submit Project" />
+                            <input type="reset" id="btnCancel" value="Cancel" style="width:70px" />
+                        </div>
+                        
+                        <div style="float:left;">
+                            @*<small style="color:red">Required Fields *</small>*@
+                        </div>
+                    </td>
+
+                    <td class="ui-corner-all" style="width:50%;height:300px;background-color:white;padding:5px;vertical-align: top;">
+                        <div style="float:left;">
+                            @Html.LabelFor(model => model.Scope)
+                            @Html.TextAreaFor(model => model.Scope, new { style = "width: 490px;height:130px;vertical-align:top", id = "From" })
+                            @{Html.ValidateFor(model => model.Scope);}
+                        </div>
+
+                        <div style="float:left;">
+                            @Html.LabelFor(model => model.Comments)
+                            @Html.TextAreaFor(model => model.Comments, new { style = "width: 490px;height:130px;vertical-align:top", id = "From" })
+                            @{Html.ValidateFor(model => model.Comments);}
+                        </div>
+                    </td>
+                </tr>
+
+            </table>
+        </fieldset>
+        @Html.ValidationSummary(false)
+    }
+
+    <div style="min-height:10px">
+        <label id="lblAddMessage" style="float:left" class="@ViewBag.MsgClass">@ViewBag.AddMessage</label>
+    </div>
+}else
+{
+    <div class="noRoleDiv">
+        <p>You have not been granted permission to Create a project.</p>
+        <p>If you would like to request permission to create a project please fill out and submit this form. </p>
+        <div class="frmWrap">
+            <div class="regFormDiv">
+                <p>All fields are required.</p>
+
+                @using (Html.BeginForm())
+                {
+                    <fieldset>
+                        <input id="hasRoletype=" name="hasRole" type="hidden" value="@ViewBag.hasRole" />
+                        <table>
+                            <tr>
+                                <td class="ui-corner-all" style="width:50%;height:300px;background-color:white;vertical-align:text-top; padding:5px">
+
+                                    <div>
+                                        @Html.LabelFor(model => model.RequestCreator.FirstName, "First Name")
+                                        @Html.TextBoxFor(model => model.RequestCreator.FirstName, new { style = "width: 100%;maxlength:150;margin-bottom:10px;" })
+                                        @{Html.ValidateFor(model => model.RequestCreator.FirstName);}
+                                    </div>
+                                    <div>
+                                        @Html.LabelFor(model => model.RequestCreator.LastName, "Last Name")
+                                        @Html.TextBoxFor(model => model.RequestCreator.LastName, new { style = "width: 100%;maxlength:150;margin-bottom:10px;" })
+                                        @{Html.ValidateFor(model => model.RequestCreator.LastName);}
+                                    </div>
+
+                                    <div>
+                                        @Html.LabelFor(model => model.RequestCreator.Email, "Email")
+                                        @Html.TextBoxFor(model => model.RequestCreator.Email, new { style = "width: 100%;maxlength:150;margin-bottom:10px;" })
+                                        @{Html.ValidateFor(model => model.RequestCreator.Email);}
+                                    </div>
+
+                                    <div>
+                                        @Html.LabelFor(model => model.RequestCreator.Extension, "Phone Extension")
+                                        @Html.TextBoxFor(model => model.RequestCreator.Extension, new { style = "width: 100%;maxlength:150;margin-bottom:10px;" })
+                                        @{Html.ValidateFor(model => model.RequestCreator.Extension);}
+                                    </div>
+
+                                    <div style="text-align:center;padding-top:15px">
+                                        @if(ViewBag.Sent == false)
+                                        {
+                                            <input type="submit" id="btnSubmit" value="Submit" />
+                                        }
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        </table>
+                    </fieldset>
+
+                }
+
+                <div style="min-height:10px">
+                    <label id="lblAddMessage" style="float:left" class="@ViewBag.MsgClass">@ViewBag.AddMessage</label>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+    $(function () {
+        $("#From").datepicker({
+            defaultDate: "+1w",
+            changeMonth: true,
+            numberOfMonths: 3,
+            onClose: function (selectedDate) {
+                $("To").datepicker("option", "minDate", selectedDate);
+            }
+        });
+        $("#To").datepicker({
+            defaultDate: "+1w",
+            changeMonth: true,
+            numberOfMonths: 3,
+            onClose: function (selectedDate) {
+                $("#From").datepicker("option", "maxDate", selectedDate);
+            }
+        });
+
+        $("#Expiration").datepicker({
+            defaultDate: "+1w",
+            changeMonth: true,
+            numberOfMonths: 3,
+            onClose: function (selectedDate) {
+                $("#Expiration").datepicker("option", "minDate", selectedDate);
+            }
+        });
+
+        $("#Expiration").val("");
+
+        $("#Agreements").on("change", function () {
+            if ($.trim($("#Agreements").val())=="") {
+                $("#ExpirationDiv").css("display", "none");
+            } else {
+                $("#ExpirationDiv").css("display", "block");
+            }
+
+            
+        })
+    });
+
+    function clearAddMessage() {
+        document.getElementById("lblAddMessage").innerHTML = "";
+    }
+    setTimeout(clearAddMessage, 4000);
+
+</script>

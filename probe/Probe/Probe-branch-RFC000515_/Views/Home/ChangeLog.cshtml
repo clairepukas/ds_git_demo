@@ -1,0 +1,35 @@
+﻿@model Probe.Models.Logs
+
+@{
+    <link href="~/Content/Probe.css" rel="stylesheet" />
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <script type="text/javascript" src="~/Scripts/ProbeScripts/probe.js?rfrsh=true"></script>
+}
+
+<div id="dboard-tables" class="content-wrapper">
+    <div class="ui-corner-all DivBorder">
+        <span style="font-size:larger;font-weight:700">Search</span>
+        <input type="text" id="txtSrch" style="margin-right:10px" value="@ViewBag.Srch" />
+        <input type="button" id="btnSrch" value="Search" onclick="javascript: FilterChangeLog(txtSrch.value.replace(/\%/g, '').replace(/\'/g, ''));" />
+    </div>
+    <div class="ui-corner-all vertScrollOnly" style="height:453px">
+        <table class="homeTables">
+            <tbody>
+                <tr>
+                    <th width="150px">Created</th>
+                    <th width="150px">User</th>
+                    <th width="925px">Log</th>
+                </tr>
+
+                @foreach (var item in Model.AllLogs)
+                {
+                    <tr>
+                        <td style="text-align:left">@Html.DisplayFor(modelItem => item.LogDt)</td>
+                        <td style="text-align:left">@Html.DisplayFor(modelItem => item.UserName)</td>
+                        <td style="text-align:left">@Html.DisplayFor(modelItem => item.LogMsg)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

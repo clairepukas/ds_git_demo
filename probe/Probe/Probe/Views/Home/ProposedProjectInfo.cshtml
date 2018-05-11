@@ -1,0 +1,1173 @@
+﻿@model Probe.Models.ProjectInfo
+
+
+@{
+   
+    try
+    {
+        //Get selected proj
+        var db = WebMatrix.Data.Database.Open("probedb");
+
+
+        //Get Contributors
+        var contributors = db.Query(@"Select b.DisplayName,
+	                                           b.UserName,
+                                               b.UserId,
+	                                           a.createDt
+                                        FROM  ProjectUserRoles a
+                                        join Users b
+                                        on a.UserId = b.UserId
+                                        where ProjectId = @0
+                                        and b.Active = 1
+                                        and ProjectRole = 'Contributor'", Model.ProjectId);
+
+               
+        <div style="background-color:beige; width:100%;display:inline-block;">
+            <input type="button" class="btnApprove" id="btnDeleteProject" value="Delete Project" onclick="DeleteProject();" style="color:red;float:right;width:auto;" />
+            <span style="font-size: 13pt;font-weight:500;float:left;height:35px; line-height:35px;">Project Information</span>
+        </div>
+        <script>
+           $("#templateButton").show();
+        </script>
+        using (Html.BeginForm("UpdateProjectInfo", "Home", FormMethod.Post, new { id = "projectInfoForm" }))
+        {
+            <table class="projInfoTable">
+                <tr>
+                    <td colspan="2">
+                        @Html.HiddenFor(model => model.ProjectId)
+                        @Html.LabelFor(model => model.DisplayName)
+                        @Html.TextBoxFor(model => model.DisplayName, ViewBag.DisplayNameDisabled ? (object)new { disabled = "disabled", style = "width: 440px;" } : new { @class = "form-control", style = "width: 400px", onChange = "fieldChanged(DisplayName);" })
+                        @{Html.ValidateFor(model => model.DisplayName);}
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ProjectNumber)
+                        @Html.TextBoxFor(model => model.ProjectNumber, new { disabled = "disabled", style = "width: 150px;border:0;" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.BudgetNum)
+                        @Html.TextBoxFor(model => model.BudgetNum, ViewBag.BudgetNumDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { @class = "form-control", style = "width: 150px;", onChange = "fieldChanged(BudgetNum);" })
+                        @{Html.ValidateFor(model => model.BudgetNum);}
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ProjectType)
+                        @Html.DropDownListFor(model => model.ProjectType, Model.BudgetTypeList, ViewBag.ProjectTypeDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { @class = "form-control", style = "width: 150px;", onChange = "fieldChanged(ProjectType);" })
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        @Html.LabelFor(model => model.Manager, "Project Manager")
+                        @Html.DropDownListFor(model => model.Manager, Model.ManagerList, ViewBag.ManagerDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { @class = "form-control", style = "width: 150px;", onChange = "fieldChanged(Manager);" })
+                        @{Html.ValidateFor(model => model.Manager);}
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.Sponsor)
+                        @Html.DropDownListFor(model => model.Sponsor, Model.SponsorList, ViewBag.SponsorDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { @class = "form-control", style = "width: 150px;", onChange = "fieldChanged(Sponsor);" })
+                        @{Html.ValidateFor(model => model.Sponsor);}
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.Engineer)
+                        @Html.DropDownListFor(model => model.Engineer, Model.EngineerList, ViewBag.EngineerDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { @class = "form-control", style = "width: 150px;", onChange = "fieldChanged(Engineer);" })
+                        @{Html.ValidateFor(model => model.Engineer);}
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.Creator)
+                        @Html.TextBoxFor(model => model.Creator, new { @class = "form-control", disabled = "disabled", style = "width: 150px;border:0;" })
+                    </td>
+                    @if (ViewBag.construction == "false")
+                    {
+                        <td>
+
+                            <div style="margin-bottom:4px;">
+                                <label>Contractual Agreements</label>
+                                @Html.DropDownListFor(model => model.warrantyAgreement, Model.warrantyAgreementTypes, ViewBag.EngineerDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { @class = "form-control", style = "width: 150px;", onChange = "updateFields(this)" })
+                            </div>
+                            <div id="expirDiv">
+                                @Html.LabelFor(model => model.warrantyAgreementDate, new {  style = "width: 180px;border:0;" })
+                                @Html.TextBoxFor(model => model.warrantyAgreementDate, ViewBag.DisplayNameDisabled ? (object)new { disabled = "disabled", style = "width: 140px;" } : new { @class = "form-control", style = "width: 150px;maxlength:355;", onChange = "updateFields(this)" })
+                            </div>
+
+                            <div id="vendDiv">
+                                <label>Vendor</label>
+                                @Html.DropDownListFor(model => model.ServiceAgreementVendorId, Model.vendorList, ViewBag.EngineerDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { @class = "form-control", style = "width: 150px;", onChange = "updateFields(this)" })
+                            </div>
+                            <div id="termDiv">
+                                <div style="font-weight:bold;float:left;padding-top:10px;">Terminate alert</div>
+                                <div style="float:left;margin-left:10px;"><input id="TerminateServiceAgreementAlert" type="checkbox" value="yes" class ="form-control", onClick="updateFields(this);"></div>
+                                <div style="clear:both;"></div>
+                            </div>
+
+                        </td>
+                    }
+                </tr>
+                <tr>
+                    <td colspan="5">
+                        @Html.LabelFor(model => model.Scope)
+                        @Html.TextAreaFor(model => model.Scope, ViewBag.ScopeDisabled ? (object)new { disabled = "disabled", rows = 4, style = "width: 1250px;" } : new { @class = "form-control", rows = 4, style = "width: 1250px;", onChange = "fieldChanged(Scope);" })
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        @Html.LabelFor(model => model.ProposedStart)
+                        @Html.TextBoxFor(model => model.ProposedStart, "{0:MM/dd/yyyy}", ViewBag.ProposedStartDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { @class = "form-control", style = "width: 150px;", onChange = "fieldChanged(ProposedStart);" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ProposedEnd)
+                        @Html.TextBoxFor(model => model.ProposedEnd, "{0:MM/dd/yyyy}", ViewBag.ProposedEndDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { @class = "form-control", style = "width: 150px;", onChange = "fieldChanged(ProposedEnd);" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.Customer)
+                        @Html.DropDownListFor(model => model.Customer, Model.CustomerList, ViewBag.CustomerDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { @class = "form-control", style = "width: 150px;", onChange = "fieldChanged(Customer);" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ApprovalStatus)
+                        @Html.TextBoxFor(model => model.ApprovalStatus, new { @class = "form-control", disabled = "disabled", style = "width: 150px;border:0" })
+                    </td>
+                    <td style="padding-top: 10px;">
+                        <input type="button" id="btnApprove" class="btnApprove form-control" name="Approve Project" value="Approve" onclick="approveProject(ApprovalStatus);" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        @Html.LabelFor(model => model.ProposedTotal)
+                        @Html.TextBoxFor(model => model.ProposedTotal, "{0:C}", new { @class = "form-control", disabled = "disabled", style = "width: 150px;border:0;" })
+                    </td>
+                    <td></td>
+                    <td></td>
+                    <td>
+                        @Html.LabelFor(model => model.ActivityStatus)
+                        @Html.DropDownListFor(model => model.ActivityStatus, Model.ActivityStatusList, ViewBag.ActivityStatusDisabled ? (object)new { disabled = "disabled", style = "width: 150px;" } : new { @class = "form-control", style = "width: 150px;", onChange = "fieldChanged(ActivityStatus);" })
+                    </td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>
+                        @Html.LabelFor(model => model.ProposedCapital)
+                        @Html.TextBoxFor(model => model.ProposedCapital, "{0:C}", new { disabled = "disabled", style = "width: 150px;border:0;" })
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ProposedExpense)
+                        @Html.TextBoxFor(model => model.ProposedExpense, "{0:C}", new { disabled = "disabled", style = "width: 150px;border:0;" })   
+                    </td>
+                    <td>
+                        @Html.LabelFor(model => model.ProposedEtoP)
+                        @Html.TextBoxFor(model => model.ProposedEtoP, "{0:C}", new { disabled = "disabled", style = "width: 150px;border:0;" })
+                    </td>
+                    <td>
+                        <div style="margin-top:4px;margin-bottom:4px;float:left;">
+                        @Html.LabelFor(model => model.Priority)
+                        @Html.CheckBoxFor(model => model.Priority, ViewBag.PriorityDisabled ? (object)new { disabled = "disabled" } : new { id = "Priority" })
+                        </div>
+
+
+                        @if (Convert.ToBoolean(Session["UserIsAdmin"].ToString()) == true)
+                        {
+                            <div style="margin-top:4px;margin-left:10px;float:left;">
+                                <label>Display</label>
+                                <input id="display" type="checkbox" value="yes" onchange="updateDisplay(this)" checked>
+                            </div>
+                        }
+                        else
+                        {
+                            <div style="margin-top:4px;margin-left:10px;float:left;">
+                                <label>Display</label>
+                                <input id="display" type="checkbox" value="yes" disabled checked>
+                            </div>
+                        }
+
+
+                        <div style="clear:both;"></div>
+
+
+
+                    </td>
+                </tr>
+                <tr>                    
+                    <td colspan="5">
+                        <label>Comments</label>
+                        @Html.TextAreaFor(model => model.Comments, ViewBag.CommentsDisabled ? (object)new { disabled = "disabled", rows = 4, style = "width: 1250px;" } : new { rows = 4, style = "width: 1250px;", onChange = "fieldChanged(Comments);" })
+                    </td>
+                </tr>
+
+                <tr>
+                    <td colspan="5">
+                        <label>Justification</label>
+                        @Html.TextAreaFor(model => model.Justification, ViewBag.JustificationDisabled ? (object)new { disabled = "disabled" } : new { id = "Justification", rows = 4, style = "width: 1250px;", onChange = "fieldChanged(Justification);" })
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="5">
+                        @Html.LabelFor(model => model.ProjectGroup)
+                        @Html.DropDownListFor(model => model.ProjectGroup.GroupId, Model.GroupList, ViewBag.GroupsDisabled ? (object)new { disabled = "disabled", style = "width: 1250px;" } : new { @class = "form-control", id = "ProjectGroup", style = "width: 1250px;" })
+                    </td>
+                </tr>
+
+                @if(ViewBag.construction=="false"){<tr>
+                    <td colspan="5">
+                        <div style="padding:3px;">
+                            <label>Assigned Groups</label>
+                        </div>
+                        <div id="projectGroupsDiv" style="width: 1250px;border:solid 1px #e2e2e2;min-height:35px;">
+                          @{
+                                int y = Model.ProjectGroupList.Count;
+                                for (var i = 0; i < y; i++)
+                                {
+                                    string g = "group" + @Model.ProjectGroupListIndex[i];
+                                    <div id='@g' style="padding-left:6px;"><div style="float:left;margin-right:15px;cursor:pointer;"><img src="/Probe/Images/delete.png" alt="Delete" class="deleteGroup"></div><div style="float:left;">@Model.ProjectGroupList[i]</div><div style="clear:both;"></div></div>
+                              }
+                          }
+                        </div>
+                    </td>
+                </tr>}
+            </table><br />
+        }
+        <script>
+            var aGroups,attachmentGroups;
+
+
+            function displayAttachments(obj2,obj3){
+
+                var length1 = obj2.length;
+
+
+                var projectAttachments=obj2;
+                var groupAttachments=obj3;
+
+                //grouped by
+                var agroup=[];
+                var attchLeng=groupAttachments.length;
+
+                for(b=0;b<attchLeng;b++){
+
+                    var projLeng=projectAttachments.length;
+                    for(var a=0;a<projLeng;a++){
+                        if(groupAttachments[b].AttachmentGroupId==projectAttachments[a].AttachmentGroupId){
+                            if(groupAttachments[b].elem){
+
+                            }else{
+                                groupAttachments[b].elem=[];
+                            }
+
+
+                            var te={}
+                            groupAttachments[b].elem.push(projectAttachments[a])
+                        }
+
+                    }
+
+
+                    //groupAttachments[b].elem=[];
+                    //agroup[groupAttachments[b].AttachmentGroupId]=(groupAttachments[b]);
+
+                }
+
+
+                var aStrg1="";
+                var f3=groupAttachments.length;
+
+                 for(i=0;i<f3;i++){
+
+                     if(groupAttachments[i].elem){
+                         if(groupAttachments[i].elem.length>0){
+                             var e=groupAttachments[i].elem.length;
+                            aStrg1=aStrg1+"<tr><th colspan='4' style='text-align:left;' ><div style='margin-left:3px;'>"+groupAttachments[i].AttachmentGroupName+"</div></th><th>Date Created</th><th>Title</th><th>Group</th><th>File Type</th></tr>"
+                            for(j=0;j<e;j++){
+                                var d= new Date(groupAttachments[i].elem[j].createdDt)
+                                var n = d.toLocaleString();
+                                aStrg1=aStrg1+"<tr><td style='width:22px;'><img src='/Probe/Images/delete.png' alt='Delete' class='btnDelete' style='cursor:pointer;' onclick='DeleteAttachment("+groupAttachments[i].elem[j].ProjectAttachmentId+")' /></td>"
+                                aStrg1=aStrg1+"<td style='width:22px;'><img src='/Probe/Images/pencil.png' alt='Edit' id='"+groupAttachments[i].elem[j].ProjectAttachmentId+"**"+groupAttachments[i].elem[j].ProjectAttachmentId+"**"+groupAttachments[i].AttachmentGroupName+"' class='btnEdit' style='cursor:pointer;' onclick=editAttachGroup(this)></td>"
+                                aStrg1=aStrg1+"<td style='width:22px;'><a class='imageButton' href='/Probe/Home/viewAttachment?attachmentId="+groupAttachments[i].elem[j].ProjectAttachmentId+"'>View</a></td><td style='width:100px;'></td> <td>"+n+"</td><td style='width:350px'>"+groupAttachments[i].elem[j].AttachmentTitle+"</td><td style='width:120px'>"+groupAttachments[i].AttachmentGroupName+"</td><td style='width:100px'>"+groupAttachments[i].elem[j].FileType+"</td></tr>";
+                            }
+                        }
+                    }
+                }
+
+
+
+                var strg1="<tr><th colspan='2' style='text-align:left;'></th><th  style='text-align:left;'></th><th  style='text-align:left;'></th><th>Date Created</th><th>Title</th><th>Group</th><th>File Type</th></tr>"
+                strg1="";
+                var strg="";
+                /*for (t1=0;t1< length1;t1++)
+                {
+                    strg="";
+                    var fer=obj2[t1].AttachmentTitle+"**"+obj2[t1].ProjectAttachmentId+"**"+obj2[t1].AttachmentGroupName;
+                    var e1=obj2[t1].AttachmentTitle;
+                    strg=strg+"<tr><td><img src='/Probe/Images/delete.png' alt='Delete' class='btnDelete' style='cursor:pointer;' onclick='DeleteAttachment("+obj2[t1].ProjectAttachmentId+")' /></td>"
+                    strg=strg+"<td><img src='/Probe/Images/pencil.png' alt='Edit' id='"+fer+"' class='btnEdit' style='cursor:pointer;' onclick=editAttachGroup(this)></td>"
+                    strg=strg+"<td><a class='imageButton' href='/Probe/Home/viewAttachment?attachmentId="+obj2[t1].ProjectAttachmentId+"'>View</a></td>"
+                    strg=strg+"<td style='width:100px;'></td>";
+                    var d= new Date(obj2[t1].createdDt)
+                    var n = d.toLocaleString();
+                    strg=strg+"<td><div class='updates'  id='attachmentCreateDate'>"+n+"</div></td>"
+                    strg=strg+"<td><div class='updates ' style='width:350px;' id='attachmentTitle'>"+obj2[t1].AttachmentGroupTitle+"</div></td>"
+                    strg=strg+"<td><div class='updates' >"+obj2[t1].AttachmentGroupName+"</div></td>"
+                    strg=strg+"<td><div style='width: 100px;' class='updates' >"+obj2[t1].FileType+"</div></td></tr>";
+                    agroup[obj2[t1].AttachmentGroupId]['elem'].push(strg);
+
+                }
+
+                var aStrg1="";
+                var f3=agroup.length;
+
+                for(i=0;i<f3;i++){
+                    if(agroup[i]){
+                        if(agroup[i].elem.length>0){
+                            var e=agroup[i].elem.length;
+                            aStrg1=aStrg1+"<tr><th colspan='4' style='text-align:left;' ><div style='margin-left:3px;'>"+agroup[i].AttachmentGroupName+"</div></th><th>Date Created</th><th>Title</th><th>Group</th><th>File Type</th></tr>"
+                            for(j=0;j<e;j++){
+                                aStrg1=aStrg1+"<tr>"+agroup[i].elem[j]+"</tr>";
+                            }
+                        }
+                    }
+                }*/
+                strg1=strg1+aStrg1//strg;
+
+                $("#attachmentList").empty().append(strg1);
+            }
+
+
+
+
+
+    $(function () {
+
+        var t="@ViewBag.attachments"+"";
+
+        t = t.replace(/&quot;/g,"\"");
+
+        var projectAttachments=$.parseJSON(t);
+
+
+
+        aGroups="@ViewBag.attachmentgroups"+"";
+        aGroups = aGroups.replace(/&quot;/g,"\"");
+        aGroups=$.parseJSON(aGroups)
+        displayAttachments(projectAttachments,aGroups)
+        attachmentGroups=aGroups;
+
+        $("#ProposedStart").datepicker({
+            defaultDate: "+1w",
+            changeMonth: true,
+            numberOfMonths: 3,
+            onClose: function (selectedDate) {
+                $("#ProposedEnd").datepicker("option", "minDate", selectedDate);
+            }
+        });
+        $("#ProposedEnd").datepicker({
+            defaultDate: "+1w",
+            changeMonth: true,
+            numberOfMonths: 3,
+            onClose: function (selectedDate) {
+                $("#ProposedStart").datepicker("option", "maxDate", selectedDate);
+            }
+        });
+    });
+
+    $(function (){
+        $('#Priority').click(function(event){
+            fieldChanged(this);
+        });
+    });
+
+    function fieldChanged(field){
+
+        $.ajax({
+            url: '@Url.Action("UpdateProjectInfo","Home")',
+            type: "POST",
+            data: $("#projectInfoForm").serialize() + "&changedField=" + field.id,
+            async: false
+            //dataType: "json"
+        }).success(function( model ) {
+            if(field.id == 'DisplayName'){
+                location.reload();
+            }
+        }).error(function (msg) {
+            alert("There was an error while making update.");;
+        });
+    }
+
+
+
+    function addDisplay(){
+        var model={};
+        model.ProjectId=@ViewBag.pid;
+        model.ConfigType="Display Project Info";
+        model.updateBy='@ViewBag.UserName';
+        url="/Probe/Home/addDisplay";
+        model.ConfigValue="Yes";
+
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: model,
+            async: false
+        }).success(function (msg) {
+
+        })
+    }
+             
+
+    //addDisplay()
+
+
+
+    function updateDisplay(obj){
+        $y=$(obj);
+
+        var model={};
+        model.ProjectId=@ViewBag.pid;
+        model.ConfigType="Display Project Info";
+        model.updateBy='@ViewBag.UserName';
+        url="/Probe/Home/updateDisplay";
+        if($y.prop("checked")==true){
+            model.ConfigValue="Yes";
+        }
+
+        if($y.prop("checked")==false){
+            model.ConfigValue="No";
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: model,
+            async: false
+        }).success(function (msg) {
+
+        })
+    }
+
+
+
+
+
+    function updateFields(obj){
+        var str= "/Probe/Home/UpdateProjectData";
+        var id=$(obj).attr("id");
+        var val=$(obj).val();
+        var model={};
+        var id2=$("#warrantyAgreement").val();
+        var id3=$("#warrantyAgreement").attr("id")
+        if(id3=="warrantyAgreement" && id2!="Unknown" ){
+            $("#expirDiv").show();
+            $("#vendDiv").show();
+            $("#termDiv").show();
+            model.update_Field_Info = $(obj).attr("id");
+            model.ServiceAgreementType = $(obj).val();
+        }
+
+        if(id3=="warrantyAgreement" && id2=="Unknown"){
+            $("#expirDiv").hide();
+            $("#vendDiv").hide();
+            $("#termDiv").hide();
+            model.update_Field_Info = $(obj).attr("id");
+            model.ServiceAgreementType = $(obj).val();
+        }
+
+
+        var update="yes"
+
+        if(id="Unknown"){
+
+        }
+
+        //model[id]=$(obj).val();
+        model.ProjectId=@ViewBag.pid;
+        if($(obj).val()=="" || $(obj).val()=="Unknown"){
+            model.warrantyAgreementDate=null;
+            model.warrantyAgreement=null;
+            model.ServiceAgreementVendorId=null;
+            $("#warrantyAgreementDate").val("")
+            $("#ServiceAgreementVendorId").val("")
+
+        }else{
+
+            /*switch(id){
+                case 'warrantyAgreement':
+                    if($(obj).val()=="" || $(obj).val()=="Unknown"){
+                        model.warrantyAgreementDate=null;
+                        model.warrantyAgreement=null;
+                        model.ServiceAgreementVendorId=null;
+                        $("#warrantyAgreementDate").val("");
+                        $("#ServiceAgreementVendorId").val("");
+                    }else{
+
+                    }
+                    break;
+
+                case 'warrantyAgreementDate':
+                    model.dbase="Projects";
+                    model.warrantyAgreement=$("#warrantyAgreement").val();
+                    model.ServiceAgreementVendorId=$("#ServiceAgreementVendorId").val();
+                    break;
+
+
+                case 'ServiceAgreementVendorName':
+                    model.ServiceAgreementVendorName=$("#ServiceAgreementVendorName").val();
+                    model.dbase="ServiceAgreementVendors";
+                    break;
+            }*/
+
+            model.warrantyAgreementDate=$("#warrantyAgreementDate").val();
+            model.warrantyAgreement=$("#warrantyAgreement").val();
+            model.ServiceAgreementVendorId=$("#ServiceAgreementVendorId").val();
+
+            if($('#TerminateServiceAgreementAlert').is(':checked')==true){
+                model.TerminateServiceAgreementAlert=true;
+            }else{
+                model.TerminateServiceAgreementAlert=false;
+            }
+
+        }
+
+
+                $.ajax({
+                    url: str,
+                    type: "POST",
+                    data: model,
+                    async: false
+                    //dataType: "json"
+                }).success(function(data) {
+
+
+                }).error(function (msg) {
+
+                    alert("There was an error while making update.");;
+                });
+
+        }
+
+
+    function checkGroup(obj){
+        var str=$(obj).val();
+        str=str.substr(2);
+        str=parseInt(str);
+        model={};
+        model.GroupId=str;
+        model.ProjectId=@ViewBag.pid;
+        model.txt=$(obj).find("option:selected").text();
+        var dropModel=[];
+        var i=0;
+        $(obj).find("option").each(function(){
+            dropModel[i]={}
+            dropModel[i].txt=$(this).text();
+            dropModel[i].val=$(this).val()
+            i=i+1;
+        })
+
+
+
+        var idx=dropModel.length;
+        var newModel=[];
+        for(b=0;b<idx;b++){
+            if(dropModel[b].txt!=model.txt){
+                newModel.push(dropModel[b])
+            }
+        }
+        var idx1=newModel.length;
+        $("#ProjectGroup").unbind("change");
+        $("#ProjectGroup").empty()
+        //$("#ProjectGroup").append("<option value='Unknown' selected></option>")
+        for(c=0;c<idx1;c++){
+            var select="";
+            if(newModel[c].val=="LG"){
+                select="selected"
+            }
+
+            $("#ProjectGroup").append("<option value='"+newModel[c].val+"' "+select+">"+newModel[c].txt+"</option>");
+        }
+        $("#projectGroupsDiv").focus();
+        $("#ProjectGroup").bind("change",function(){
+            checkGroup(this);
+        })
+        $.ajax({
+            url: "/Probe/Home/UpdateGroupData",
+            type: "POST",
+            data: model,
+            async: false
+            //dataType: "json"
+        }).success(function(data) {
+            var id1="group"+model.GroupId;
+            $("#projectGroupsDiv").append("<div id='"+id1+"' style='padding-left:6px;'><div style='float:left;margin-right:15px;cursor:pointer;'><img src='/Probe/Images/delete.png' alt='Delete' class='deleteGroup'></div><div style='float:left;'>"+model.txt+"</div><div style='clear:both;'></div></div>");
+            addDeleteHandlers();
+        }).error(function (msg) {
+            alert("There was an error while making a group update.");;
+        });
+
+        //$("#projectGroupsDiv").append("<div id='"+id1+"' style='padding-left:6px;'><div style='float:left;margin-right:15px;cursor:pointer;'><img src='/Probe/Images/delete.png' alt='Delete' class='deleteGroup'></div><div style='float:left;'>"+model.txt+"</div><div style='clear:both;'></div></div>")
+        //alert(63677)
+
+    }
+
+    function approveProject(field){
+        $("#dialog-message").dialog({
+            resizable: false,
+            width: 375,
+            modal: true,
+            buttons: {
+                "Yes": function () {
+                    $.ajax({
+                        url: '@Url.Action("UpdateProjectInfo","Home")',
+                        type: "POST",
+                        data: $("#projectInfoForm").serialize() + "&changedField=" + field.id,
+                        async: false
+                        //dataType: "json"
+                    })
+                    .success(function( model ) {
+                        window.location.href = '@Url.Action("SelectedProject", "Home", new { id = Model.ProjectId })';
+                    })
+                    .error(function (msg) {
+                        alert("There was an error while making approving the project.");;
+                    });
+                },
+                "No": function () {
+                    $(this).dialog("close");
+
+                }
+            }
+        });
+
+        $('#dialog-message').dialog('option', 'title', 'Approve Project');
+        document.getElementById('dialog-message').innerHTML =   "<p><span class='ui-icon ui-icon-alert' style='float:left; margin:0 7px 20px 0;'></span>Are you sure you want to approve this project?</p>"
+
+    }
+
+            function DeleteProject() {
+
+                
+
+        $("#dialog-message").dialog({
+            resizable: false,
+            width: 375,
+            modal: true,
+            buttons: {
+                "Yes": function () {
+                    var myData = {projectId: @Model.ProjectId};
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("deleteProject", "Home")',
+                        data: myData,
+                        async: false
+                    })
+                            .success(function (msg) {
+                                $('#dialog-message').dialog("close");
+                                window.location.href = '@Url.Action("Default", "Home")';
+                            })
+                            .fail(function (msg) {
+                                alert("There was an error while deleting.");
+                                $('#dialog-message').dialog("close");
+                            });
+                },
+                "No": function () {
+                    $(this).dialog("close");
+                }
+            }
+        });
+
+        $('#dialog-message').dialog('option', 'title', 'Delete Project');
+        document.getElementById('dialog-message').innerHTML =   "<p><span class='ui-icon ui-icon-alert' style='float:left; margin:0 7px 20px 0;'></span>Are you sure you want to delete this project?</p>"
+
+    }
+
+
+
+
+
+
+
+            function editAttachGroup(obj){
+
+
+                var adaptor=$(obj).attr("id")+"";
+                var adaptorIndx=adaptor.split("**");
+                var str= "/Probe/Home/UpdateProjectAttachment";
+                var mod={}
+                mod.ProjectAttachmentId=adaptorIndx[1];
+                mod.ProjectId=@ViewBag.pid;
+                mod.updateBy='@ViewBag.UserName';
+
+                var adaptor1=adaptor.split("**")
+
+                $("#dialog-message").dialog({
+                    width: 600,
+                    modal: true,
+                    buttons: {
+                        "Update": function () {
+                            var val=$('input[name=editAttachmentGroup]:checked').val();
+                            mod.AttachmentGroupId=val;
+                            $.ajax({
+                                type: 'POST',
+                                url: str,
+                                data: mod,
+                                async: false
+                            }).success(function (msg) {
+                                var projId = @Model.ProjectId;
+                                location.href="/Probe/Home/SelectedProject/"+projId;
+                            })
+                        }
+                    }
+                })
+
+
+
+                $('#dialog-message').dialog('option', 'title', 'Edit Attachment group');
+
+                var aGrpLeng=attachmentGroups.length;
+                var strg1="";
+                for(g=0;g<aGrpLeng;g++){
+
+                    var sel="";
+                    if(adaptorIndx[2]==attachmentGroups[g].AttachmentGroupName){
+                        sel="checked";
+                    }
+                    strg1=strg1+"<div><span style='display:inline-block;width:120px;'>"+attachmentGroups[g].AttachmentGroupName+"</span><span><input type='radio' name='editAttachmentGroup' value='"+attachmentGroups[g].AttachmentGroupId+"' "+sel+"/></span><div></div></div>"
+                    sel="";
+                }
+
+                document.getElementById('dialog-message').innerHTML = strg1;
+            }
+
+
+
+
+
+
+
+
+
+    </script>
+
+        <div id="dialog-message"></div>
+
+        @* Attachments Section *@
+          <div class="ui-corner-all table-div-100">
+
+            <table>
+                <tr>
+                    <td><label class="label" style="color:#000;">Attachments</label>&nbsp;<img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="toggleUploadDiv();" /></td>
+
+                </tr>
+                <tr>
+                    @*<td style="vertical-align:text-top;"><table><tr><td style="text-align:center;"><label class="label">Attachments</label></td></tr><tr><td style="text-align:center;"><img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="toggleUploadDiv();" /></td></tr></table></td>*@
+
+                    <td>
+                        <div class="ui-corner-all" style="max-height:150px;width:auto;overflow-y:auto;overflow-x:hidden;">
+                            <div id="uploadDiv" style="display:none;">
+                                @using (@Html.BeginForm("addAttachment", "Home", FormMethod.Post, new { enctype = "multipart/form-data", id = "form1" }))
+                                {
+                                    <fieldset>
+                                        <input type="hidden" name="projectId" id="projectId" value="@Model.ProjectId" />
+                                        <input type="hidden" name="projectId2" id="projectId2" value="" />
+
+                                        <div id="attachGroups" style="padding:4px;">
+
+
+                                        </div>
+                                        <input type="file" name="uploadFile" id="uploadFile" />
+                                        <input type="button" name="uploadBtn" value="Upload" id="uploadBtn" />
+                                    </fieldset>
+                                }
+                            </div>
+                            <table class="projInfoUpdateTable" id="attachmentList"></table>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+            <script type="text/javascript">
+                chk="false";
+                $(document).ready(function(){
+
+                    var WA=$("#warrantyAgreement").val();
+                    if(WA!="Unknown"){
+                        $("#expirDiv").show();
+                        $("#vendDiv").show();
+                        $("#termDiv").show();
+                    }else{
+                        $("#expirDiv").hide();
+                        $("#vendDiv").hide();
+                        $("#termDiv").hide();
+                    }
+                    var btn = document.getElementById('uploadBtn');
+                    var fUpload = document.getElementById('uploadFile');
+                   chk='@ViewBag.DeletesDisabled';
+                    if(chk=="false"){
+                        addDeleteHandlers();
+                    }else{
+                        $(".deleteGroup").each(function(){
+                            $(this).on("click",function(){
+                                //alert("You do not have permission to edit this field");
+                            })
+                        })
+                    }
+                    btn.disabled = true;
+                    $('#uploadFile').change(
+                        function(){
+                            if ($(this).val()){
+                                btn.disabled = false; 
+                            }else {
+                                btn.disabled = true;
+                            }
+                        })              
+                  
+                    $("#ProjectGroup").bind("change",function(){
+                        checkGroup(this)
+                    })
+
+
+
+
+                    var TA='@Model.TerminateServiceAgreementAlert';
+                  
+
+                    if(TA){
+                        if(TA=='True'){
+                            $("#TerminateServiceAgreementAlert").prop("checked","checked")
+                        }else{
+                            $("#TerminateServiceAgreementAlert").prop("checked",false)
+                        }
+                    }else{
+                        $("#TerminateServiceAgreementAlert").prop("checked",false)
+                    }
+
+                });
+
+                function toggleUploadDiv(){
+                    $('#uploadDiv').toggle('show');
+                }
+
+                //Delete Attachment
+                function DeleteAttachment(id) {
+                    $("#dialog-message").dialog({
+                        resizable: false,
+                        width: 375,
+                        modal: true,
+                        buttons: {
+                            "Yes": function () {
+                                var myData = {projId: @Model.ProjectId, attachmentId: id };
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '@Url.Action("deleteAttachment", "Home")',
+                                    data: myData,
+                                    async: false
+                                })
+                                    .success(function (msg) {
+                                        $('#dialog-message').dialog("close");
+                                        location.reload();
+                                    })
+                                    .fail(function (msg) {
+                                        alert("There was an error while deleting.");
+                                        $('#dialog-message').dialog("close");
+                                    });
+                            },
+                            "No": function () {
+                                $(this).dialog("close");
+                            }
+                        }
+                    });
+
+                    $('#dialog-message').dialog('option', 'title', 'Delete Project Attachment');
+                    document.getElementById('dialog-message').innerHTML =   "<p><span class='ui-icon ui-icon-alert' style='float:left; margin:0 7px 20px 0;'></span>Are you sure you want to delete this attachment?</p>"
+
+                }
+
+                function addDeleteHandlers(){
+
+                    $(".deleteGroup").each(function(){
+                        $(this).unbind("click");
+                        $(this).on("click",function(){
+                            var confirm2=confirm("Remove this group from the project?");
+                            if(confirm2==true){
+                                GroupId=$(this).parent().parent().attr("id")+"";
+                                GroupId=GroupId.substr(5);
+                                var str= "/Probe/Home/DeleteProjectData";
+                                myData={};
+                                myData.data="hello";
+                                myData.GroupId=GroupId;
+                                myData.ProjectId=@ViewBag.pid;
+                           
+                                _this=this;
+                                $.ajax({
+                                    type: 'POST',
+                                    url: str,
+                                    data: myData,
+                                    async: false
+                                }).success(function (msg) {
+                                    var mil=[]
+                                    var optionId=$(_this).parent().parent().attr("id");
+                                    optionId=optionId.substr(5);
+                                    var selectGroup;
+                                    var selectID;
+                                    $("[id^=group]").each(function(){
+                                        var OptId=$(this).attr("id")+"";
+                            
+                                        OptId=OptId.substr(5)
+                                        if(OptId==optionId){
+                                            selectGroup=$(this).children().eq(1).html();
+                                            selectID=$(this).attr("id");
+                                            selectID="LG"+selectID.substr(5)
+                                        }else{
+                                            mil.push($(this)[0]);
+                                        }
+                        
+                                    });
+
+                                    $("#projectGroupsDiv").empty();
+                                    var ini= mil.length;
+                                    for(d=0;d<ini;d++){
+                                        $("#projectGroupsDiv").append(mil[d])
+                                    }
+
+                                    $("#ProjectGroup").append("<option value='"+selectID+"'>"+selectGroup+"</option>")
+                                    addDeleteHandlers()
+
+                                }) 
+                            }else{
+                    
+                            }
+
+                        })
+                    })
+
+                }
+            </script>
+        </div>
+            @* End Attachments Section*@
+
+        @*Contributors Section*@
+    <div id="contributors" class="ui-corner-all table-div-100">
+
+        <table>
+            <tr>
+                <td style="vertical-align:central;"><label class="label" style="color:#000;">Contributors</label>&nbsp;<img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="AddContributor();" /></td>
+
+            </tr>
+            <tr>
+                @*<td style="vertical-align:text-top;"><table><tr><td style="text-align:center;"><label class="label">Contributors</label></td></tr><tr><td style="text-align:center;"><img src='~/Images/add.png' alt='Add' class='btnAdd' style="cursor:pointer;" onclick="AddContributor();" /></td></tr></table></td>*@
+                <td style="width:auto;">
+                    <div class="ui-corner-all" style="max-height:150px;width:400px;overflow-y:auto;overflow-x:hidden;">
+                        <table class="projInfoUpdateTable">
+                            <tr>
+                                <th id="delePngHeader"></th>
+                                <th>Date Created</th>
+                                <th>Contributor</th>
+                            </tr>
+                            @{
+        if (contributors.Count() > 0)
+        {
+            foreach (var x in contributors)
+            {
+                <tr>
+                    <td id="delePng"><img src='~/Images/delete.png' alt='Delete' class='btnDelete' style="cursor:pointer;" onclick="DeleteContributor('@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(x.UserId)))');" /></td>
+                    <td><div class="updates" style="width:130px;" id="CreateDt">@x.createDt</div></td>
+                    <td><div class="updates" style="width:180px;">@x.DisplayName</div></td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td id="delePng"><img src='~/Images/delete.png' alt='Delete' class='btnDelete' /></td>
+                <td><div class="updates" style="width:130px;" id="CreateDt"></div></td>
+                <td><div class="updates" style="width:180px;"></div></td>
+            </tr>
+        }
+                            }
+                        </table>
+
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <script type="text/javascript">
+
+            //Handles the add click on the updates section
+            function AddContributor() {
+                $(function () {
+                    $("#dialog-message").dialog({
+                        width: 500,
+                        modal: true,
+                        buttons: {
+                            "Add Contributor": function () {
+                                var cont = document.getElementById("listOfUsers").value;
+                                var myData = {projectId: @Model.ProjectId, uname: cont };
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '@Url.Action("addContributor", "Home")',
+                                    data: myData,
+                                    async: false
+                                })
+                                    .success(function (msg) {
+                                        alert("Contributor added successfully.");
+                                        $('#dialog-message').dialog("close");
+                                        location.reload();
+                                    })
+                                    .fail(function (msg) {
+                                        alert("There was an error while adding contributor.");
+                                        $('#dialog-message').dialog("close");
+                                    });
+                            },
+                            Cancel: function () {
+                                $(this).dialog("close");
+                            }
+                        },
+                        open: function (event, ui) {
+                            $('#dialog-message').dialog('option', 'title', 'Add Project Contributor');
+                            document.getElementById('dialog-message').innerHTML = "<form id='addContributorForm'><fieldset><input type='hidden' id='projectId' value='" + @Model.ProjectId +
+                                                                                            "'/><table><tr><td>Project</td><td><center>" + '@Model.ProjectName' +
+                                                                                            "</center></td></tr><tr><td>Select a Contributor</td><td><center>" +
+                                                                                            "<select id='listOfUsers' >" +
+                                                                                            "</center></td></tr>" +
+                                                                                            "<tr><td><input type='submit' tabindex='-1' style='position:absolute; top:-1000px'></td></tr></table></fieldset></form>";
+
+
+
+                            var userList = @Html.Raw(Json.Encode(Model.ContributorList));
+                            $.each(userList, function (i, o) {
+                                var id = o.Value;
+                                var txt = o.Text;
+
+                                if(txt == "null")
+                                    txt = id;
+
+                                if(id != null){
+                                    $('#listOfUsers').append('<option value="' +id+'">' + txt + '</option>');
+                                }
+
+                            });
+                        }
+
+                    });
+                });
+
+
+            }
+
+            //Delete Contributor
+            function DeleteContributor(id) {
+                $("#dialog-message").dialog({
+                    resizable: false,
+                    width: 375,
+                    modal: true,
+                    buttons: {
+                        "Yes": function () {
+                            var myData = {projectId: @Model.ProjectId, contributorId: id };
+                            $.ajax({
+                                type: 'POST',
+                                url: '@Url.Action("deleteContributor", "Home")',
+                                data: myData,
+                                async: false
+                            })
+                                .success(function (msg) {
+                                    $('#dialog-message').dialog("close");
+                                    location.reload();
+                                })
+                                .fail(function (msg) {
+                                    alert("There was an error while deleting.");
+                                    $('#dialog-message').dialog("close");
+                                });
+                        },
+                        "No": function () {
+                            $(this).dialog("close");
+                        }
+                    }
+                });
+
+                $('#dialog-message').dialog('option', 'title', 'Delete Project Contributor');
+                document.getElementById('dialog-message').innerHTML =   "<p><span class='ui-icon ui-icon-alert' style='float:left; margin:0 7px 20px 0;'></span>Are you sure you want to delete this contributor?</p>"
+
+            }
+
+
+
+        </script>
+    </div>
+        @*End Contributors Section*@
+
+        <script>
+
+
+            $("#uploadBtn").on("click",function(){
+                $("#dialog-message").dialog({
+                    width: 300,
+                    modal: true
+                })
+                $("#dialog-message").dialog('option','title','Adding attachment....')
+                $("#dialog-message").css({"width":"120px","margin":"auto","height":"120px"});
+                $(".ui-dialog-buttonset").hide();
+                document.getElementById('dialog-message').innerHTML = "<div class='loader'></div>"
+                var val1=$('input[name=attachmentGroupIds]:checked').val();
+                $("#projectId2").val(val1);
+                $("#form1").submit();
+            })
+
+
+
+
+
+
+
+            $(document).ready(function () {
+
+
+                //Load update window
+                var aGrpLeng=aGroups.length;
+                 
+     
+
+                $("#attachGroups").empty()
+                for(g=0;g<aGrpLeng;g++){
+                    var select=""
+                    if(attachmentGroups[g].AttachmentGroupName=="Other"){
+                        select="checked"
+                    }
+                    var strg="<div><span style='display:inline-block;width:120px;'>"+attachmentGroups[g].AttachmentGroupName+"</span><span><input type='radio' name='attachmentGroupIds' value='"+attachmentGroups[g].AttachmentGroupId+"' "+select+"/></span><div></div></div>"
+                    $("#attachGroups").append(strg)
+                }
+
+
+
+
+        if(@ViewBag.CrudDisabled == true)
+        {
+            if(@ViewBag.HideContributors == true){
+                //$("#contributors").hide();
+                $("#delePng").empty();
+            }
+            $(".btnAdd").hide();
+            $(".btnEdit").prop('disabled', true);
+            $(".btnDelete").prop('disabled', true);
+
+        }
+
+        if(@ViewBag.ApproveBtnDisabled == true)
+            {
+                $("#btnApprove").prop('disabled', true);
+                
+            }
+            if(@ViewBag.DeleteBtnDisabled == true)
+            {                
+                $("#btnDeleteProject").prop('disabled', true);
+            }
+
+
+
+        $("#warrantyAgreementDate").datepicker({
+            defaultDate: "+1w",
+            changeMonth: true,
+            numberOfMonths: 3,
+            onClose: function (selectedDate) {
+                $("#Expiration").datepicker("option", "minDate", selectedDate);
+            }
+        });
+
+        });
+        </script>
+
+    }
+    catch (Exception ex)
+    {
+        <h3>@ex.Message</h3>
+    }
+}
+

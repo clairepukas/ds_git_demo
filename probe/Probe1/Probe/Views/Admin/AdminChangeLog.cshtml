@@ -1,0 +1,160 @@
+﻿@{
+    Layout = Layout = "~/Views/Shared/_SiteLayout.cshtml";
+    Page.Title = "Proposed Projects";
+   
+}
+<br/>
+<h2>Admin Change Log</h2>
+<link href="~/Content/jquery.dataTables.min.css" rel="stylesheet" />
+<style>
+
+    .even{
+    width:100%;
+    background-color:#deedf7;
+    display:hidden !important;
+}
+
+.odd{
+    width:100%;
+    background-color:transparent;
+   /*display:inline-block;*/
+}
+
+
+</style>
+
+<script src="~/Scripts/jquery.dataTables.min.js"></script>
+
+
+
+    <div style="padding-top:10px;padding-bottom:6px;"><span style="font-family:Arial; font-size: 9pt; color:GrayText;">PROJECT STATUS CHANGES - since </span> <span id="statusdate"></span></div>
+    <div>
+        <table id="showLogs" class="display" style="width:100%"></table>
+    </div>
+
+
+
+
+<script>
+
+    var nDate = new Date();
+    var dayt = nDate.getDate() - 30;
+    nDate.setDate(dayt);
+    $("#statusdate").append(nDate.toDateString());
+
+
+    var ChangeL
+    var CLog = "@ViewBag.cLog";
+    CLog = CLog.replace(/&quot;/g, "\"");
+    ChangeL = $.parseJSON(CLog);
+
+
+    function addSpanEvent() {
+
+        $("#spanSelector").on("change", function () {
+            //ajax_changeLog
+            var url = "/probe/home/ajax_changeLog";
+            var model = {}
+            model.interVal = -(parseInt($(this).val()));
+            model.dropD = $("#spanSelector option:selected").index()
+
+            $.ajax({
+                url: url,
+                type: "POST",
+                data: model,
+                async: false
+                //dataType: "json"
+            })
+         .success(function (val) {
+
+             ChangeL = val.success;
+             var f = editObj();
+
+             spanSel.destroy();
+             spanSel = $('#showLogs').DataTable({
+                 data: f,
+                 columns: [
+                     { title: "Change Date", width: "10%" },
+                     { title: "User", width: "15%" },
+                     { title: "Project Name", width: "35%" },
+                     { title: "Status Change", width: "40%" }
+                 ]
+             });
+
+             var selctr = ["", "", "", ""]
+             selctr[model.dropD] = "selected";
+             var nDate = new Date();
+             var dayt = nDate.getDate() + model.interVal;
+             nDate.setDate(dayt);
+             $("#statusdate").empty().append(nDate.toDateString());
+             $("<div style='float:left;width:190px;margin-left:25px;'><label>Span: <select id='spanSelector' ><option value=2 " + selctr[0] + ">48 hours</option><option value=7 " + selctr[1] + ">1 week</option><option value=14 " + selctr[2] + ">2 weeks</option><option value=30 " + selctr[3] + ">30 days</option><option value=60 " + selctr[4] + ">60 days</option></select></label></div>").insertAfter("#showLogs_length")
+             addSpanEvent()
+         })
+        })
+    }
+
+
+    function editObj() {
+        var t = [];
+        var fIndex = ChangeL.length;
+        for (var i = 0; i < fIndex; i++) {
+            var u = [];
+            for (var key in ChangeL[i]) {
+                //u.push(ChangeL[i][key]);
+
+                switch (key) {
+                    case 'LogDt':
+                        var newdate
+                        var ty = ChangeL[i][key] + "";
+
+                        if (ty.search(/\//) != -1) {
+                            var k = ty.substr(6);
+                            k = k.substr(0, k.length - 2);
+                            k = parseInt(k)
+                            newdate = new Date(k)
+
+                        } else {
+                            newdate = new Date(ChangeL[i][key])
+                        }
+
+
+                        u[0] = newdate.toLocaleDateString()
+                        break;
+
+                    case 'DisplayName':
+                        u[1] = ChangeL[i][key]
+                        break;
+
+                    case 'ProjectName':
+                        u[2] = "<a class='shwLinks' href='/Probe/Home/SelectedProject/?id=" + ChangeL[i].ProjectId + "&fromList=Home'>" + ChangeL[i][key] + "</a>"
+                        break;
+
+                    case 'LogMsg':
+                        u[3] = ChangeL[i][key]
+                        break;
+                }
+            }
+            t.push(u);
+        }
+        return t;
+    }
+
+    var f = editObj();
+
+    var spanSel = $('#showLogs').DataTable({
+        data: f,
+        columns: [
+            { title: "Change Date", width: "10%" },
+            { title: "User", width: "15%" },
+            { title: "Project Name", width: "35%" },
+            { title: "Status Change", width: "40%" }
+        ]
+    });
+    $("<div style='float:left;width:190px;margin-left:25px;'><label>Span: <select id='spanSelector' ><option value=2>48 hours</option><option value=7>1 week</option><option value=14>2 weeks</option><option value=30 selected>30 days</option><option value=60 >60 days</option></select></label></div>").insertAfter("#showLogs_length")
+
+
+    addSpanEvent()
+
+    </script>
+
+

@@ -1,0 +1,745 @@
+﻿@model Probe.Models.ProbeUser
+
+@{
+    Layout = "~/Views/Shared/_SiteLayout.cshtml";
+    Page.Title = "Probe Dashboard";
+    var budgetyr = DateTime.Now.Year;
+    <!--<link href="~/Content/Probe.css" rel="stylesheet" />-->
+
+
+}
+
+<style>
+
+        tr.odd { background-color: #deedf7 !important; }
+
+        #showLogs thead tr th{
+            background-color:#a5d7f9 !important;
+            border:solid 1px #000 !important;
+        }
+
+        .odd .sorting_1{
+            background-color:#a5d7f9 !important;
+        }
+        .even td{
+            border:solid 1px #000 !important;
+        }
+
+        .odd td{
+            border:solid 1px #000 !important;
+        }
+        #showLogs{
+           border-collapse:separate !important;
+           border: 1px solid #000;
+           border-spacing:2px;
+        }
+
+        .shwLinks:link{
+            color:blue;
+        }
+
+        .shwLinks:visited{
+            color:blue;
+        }
+
+        .shwLinks:hover{
+            color:red;
+        }
+
+
+</style>
+
+<script type="text/javascript">
+    var contractObj=[]
+
+
+@{
+    //Customer Chart Data for the Dashboard in Default.cshtml
+    string totproj = "";
+    string dataArr = "[";
+    try
+    {
+        var db = WebMatrix.Data.Database.Open("probedb");
+        var projlist = db.Query(@"select distinct
+	                                count(ProjectId) as TotCust
+	                                ,CASE WHEN COALESCE(Customer,'')=''
+                                    THEN 'none' ELSE Customer
+                                    END AS Customer
+                                    from Projects
+                                    where ApprovalStatus = 'Approved'
+                                    and ActivityStatus not in('Completed','Cancelled')
+                                    group by Customer");
+
+
+
+        
+
+
+        var projTot = projlist.Sum(w => w.TotCust);
+        totproj = projTot.ToString();
+        foreach (var proj in projlist)
+        {
+            string pCust = proj.Customer.ToString().Trim();
+
+            if (pCust != "null")
+            {
+                string arrObj = "{y:" + proj.TotCust + ", legendText:" + '"' + proj.Customer + '"' + ", label:" + '"' + proj.Customer + '"' + "},";
+                dataArr += arrObj;
+            }
+        }
+        dataArr = dataArr + "]";
+    }
+    catch (Exception ex)
+    {
+        <h3>@ex.Message</h3>
+    }
+}
+
+
+
+@{
+    var currYr = DateTime.Now.Year;
+    var sn = ViewBag.json;
+}
+    //load Customer Chart
+    window.onload = function() {
+        var cha="@sn";
+        cha=cha.replace(/&quot;/g,"\"");
+        chartObj1 = $.parseJSON(cha);
+
+        
+        amt='@ViewBag.amount';
+        pBudget='@ViewBag.pBudget';
+
+
+        var teg=@Html.Raw(dataArr);
+        if($("#CustomerChart")){
+            var chart = new CanvasJS.Chart("CustomerChart",
+            {
+                title:{
+                    text: "@currYr - Customer Profile"
+                },
+                theme: "theme2",
+                creditText: "",
+                data: [
+                     {
+                         type: "pie",
+                         indexLabelFontFamily: "Garamond",
+                         indexLabelFontSize: 15,
+                         indexLabel: "{label} {y}",
+                         startAngle:-20,
+                         showInLegend: false,
+                         toolTipContent:"{legendText} {y}",
+                         dataPoints: @Html.Raw(dataArr)
+                         }
+                ]
+            });
+            chart.render();
+        }
+
+        if($("#CurrYrValueChart")){
+            var chartObj=chartObj1;
+            chartObj[1].label="Current Budgeted"
+            var chart = new CanvasJS.Chart("CurrYrValueChart",
+            {
+                title:{
+                    text: "@currYr - Capital Cost Summary"
+                },
+                axisX: {
+                    labelMaxWidth: 80
+                },
+                legend:{
+                    verticalAlign: "center",
+                    horizontalAlign: "left",
+                    fontSize: 20,
+                    fontFamily: "Helvetica"
+                },
+                theme: "theme2",
+                creditText: "",
+                data: [
+                     {
+                         type: "column",
+                         startAngle:-20,
+                         showInLegend: false,
+                         dataPoints: chartObj1
+                     }
+                ]
+            });
+            chart.render();
+        }
+    }
+</script>
+
+<br /><br /><div style="background-color:transparent; width:100%;"><span style="background-color: transparent;font-family:Arial; font-size: 16pt;">Executive Dashboard - Budget Year @budgetyr</span></div>
+
+<div id="dboard-tables" class="content-wrapper">
+    <div id="CurrYrValueChart" style="height: 300px; width: 35%"></div>
+
+    <div>
+        <br />
+        <span style="font-family:Arial; font-size: 9pt;color:GrayText;">CAPITAL PROJECTS</span>
+        <div class="table-div">
+            <table class="homeTables">
+                <tr>
+                    <th width="10px"></th>
+                    <th width="30px" class="health">Health</th>
+                    <th width="220px">Capital Projects</th>
+                    
+                    <th width="70px">Projected Start Date</th>
+                    <th width="70px">Projected End Date</th>
+                    <th width="80px">Activity Status</th>
+                    <th width="100px">Project Manager</th>
+                    <th width="110px">Project Sponsor</th>
+                </tr>
+            </table>
+        </div>
+        <div class="table-div vertScrollOnly" style="height:300px">
+            <table class="homeTables">
+              
+                @{
+                    try
+                    {
+                        var db = WebMatrix.Data.Database.Open("probedb");
+                        string htr = ViewBag.username;
+                        string e1 = "SELECT p.ProjectId ,p.DisplayName,p.ApprovalStatus,p.ActivityStatus,p.ProjectType,p.Health,convert(varchar, ProjectedStart, 101) as StartDate,";
+                        e1 = e1 + "convert(varchar, ProjectedEnd, 101) as EndDate ,(select max(u.DisplayName) from Users u";
+                        e1 = e1 + " join ProjectUserRoles a on p.ProjectId = a.ProjectId and u.UserId = a.UserId and a.ProjectRole = 'Manager') as Manager";
+                        e1 = e1 + ", (select max(u.DisplayName) from Users u join ProjectUserRoles a on p.ProjectId = a.ProjectId and u.UserId = a.UserId";
+                        e1 = e1 + " and a.ProjectRole = 'Sponsor') as Sponsor , isnull ((select case when isnull(pc.ConfigValue, 'Yes') = 'Yes' or     dbo.isProbeAdmin_f('" + htr + "') = 'Y'";
+                        e1 = e1 + " then 'Y' else 'N' end as Display_Project_Info from ProjectConfig pc where p.ProjectId = pc.ProjectId and    pc.ConfigType = 'Display Project Info'";
+                        e1 = e1 + "), 'Y') as Display_Project_Info FROM Projects p WHERE p.ProjectType = 'Capital' and p.ApprovalStatus = 'Approved'";
+                        e1 = e1 + " and p.ActivityStatus not in ('Completed', 'Cancelled') and year(p.ProjectedStart) < year(getdate()) + 1 order by  p.ProjectedEnd asc, p.ActivityStatus asc, p.DisplayName asc";
+
+
+
+
+
+
+
+                        
+
+
+
+
+
+
+
+
+
+
+                        var projlist = db.Query(e1);
+
+
+                        /*var projlist = db.Query(@"SELECT p.ProjectId
+
+                        ,p.DisplayName
+                        ,p.ApprovalStatus
+                        ,p.ActivityStatus
+                        ,p.ProjectType
+                        ,p.Health
+                        ,convert(varchar, ProjectedStart,101) as StartDate
+                        ,convert(varchar, ProjectedEnd,101) as EndDate
+                        ,(select max( u.DisplayName)
+                        from Users u
+                        join ProjectUserRoles    a
+                        on p.ProjectId = a.ProjectId
+                        and u.UserId = a.UserId
+                        and a.ProjectRole = 'Manager') as Manager
+                        , (select max(u.DisplayName)
+                        from Users u
+                        join ProjectUserRoles a
+                        on p.ProjectId = a.ProjectId
+                        and u.UserId = a.UserId
+                        and a.ProjectRole = 'Sponsor') as Sponsor
+                        , 
+                             isnull
+                             (      (      select case when isnull( pc.ConfigValue, 'Yes' )       = 'Yes' 
+                                                         or     dbo.isProbeAdmin_f(htr)       =  'Y'
+                                                         then 'Y'
+                                                         else 'N'
+                                                  end    as Display_Project_Info
+                                           from   ProjectConfig pc
+                                           where  p.ProjectId  = pc.ProjectId
+                                           and    pc.ConfigType = 'Display Project Info'
+                                    ), 'Y'
+                             ) as Display_Project_Info
+                        FROM Projects p
+                        WHERE p.ProjectType = 'Capital'
+
+                        and p.ApprovalStatus = 'Approved'
+                        and p.ActivityStatus not in ('Completed', 'Cancelled')
+                        and year(p.ProjectedStart) < year(getdate()) + 1
+                        order by  p.ProjectedEnd asc, p.ActivityStatus asc, p.DisplayName asc");*/
+
+
+
+
+                        foreach (var proj in projlist)
+                        {
+                            string h2 = proj.DisplayName;
+                            if (proj.Display_Project_Info == "Y")
+                            {
+
+
+
+
+
+                            <tr>
+                                <td style="border:none; width:10px;"><input type="checkbox" name="projects" value=@proj.ProjectId /></td>
+                                                        @{
+                                                var projHealth = 0;
+
+
+                                                if (Convert.ToDateTime(proj.EndDate) < DateTime.Today) //set health to 2 (red)
+                                                {
+                                                    projHealth = 2;
+                                                }
+
+                                                if (Convert.ToDateTime(proj.StartDate) < DateTime.Today && proj.ActivityStatus == "Not Started")
+                                                {
+                                                    projHealth = 1; //set health to 1 (yellow)
+                                                }
+
+                                                if (projHealth == 0)
+                                                {
+                                        <td class="healthGreen" style="width:30px;"> </td>
+                                                }
+                                                else if (projHealth == 1)
+                                                {
+                                        <td class="healthYellow" style="width:30px;"> </td>
+                                                }
+                                                else if (projHealth == 2)
+                                                {
+                                        <td class="healthRed" style="width:30px;"> </td>
+                                                }
+                                                else
+                                                {
+                                        <td> </td>
+                                                }
+                                    @*if (Convert.ToDateTime(proj.EndDate) < DateTime.Today)
+                                        {
+                                            <td class="healthRed"> </td>
+                                        }
+                                        else if (Convert.ToDateTime(proj.StartDate) < DateTime.Today && proj.ActivityStatus == "Not Started")
+                                        {
+                                            <td class="healthYellow"> </td>
+                                        }
+                                        else if (proj.Health == 0)
+                                        {
+                                            <td class="healthGreen"> </td>
+                                        }
+                                        else
+                                        {
+                                            <td> </td>
+                                        }*@
+
+                                }
+
+                                <td style="text-align:left;width:250px;"><a href="~/Home/SelectedProject/?id=@proj.ProjectId&fromList=Home" onclick="javascript: ResetIndex()" id="@proj.ProjectId" class="anchor">@proj.DisplayName</a></td>
+                                
+                                
+                                <td style="width:70px;">@proj.StartDate</td>
+                                <td style="width:70px;">@proj.EndDate</td>
+                               
+             
+                                <td style="width:80px;">@proj.ActivityStatus</td>
+                             
+                                <td style="width:100px;">@proj.Manager</td>
+                                <td style="width:100px;">@proj.Sponsor</td>
+
+                            </tr>
+
+
+
+
+
+                                                        }
+                                                    }
+                        }
+                        catch (Exception ex)
+                        {
+                            <h3>@ex.Message</h3>
+                        }
+                }
+            </table>
+        </div>
+
+
+
+        <br />
+        <div style="height: 350px; width: 35%;float:right;text-align:center;">
+            <p style="font-size:1.2em;font-weight:bold;z-index:100;">@totproj Total Projects</p>
+            <div id="CustomerChart" style="height: 330px; width: 100%;"></div>
+
+        </div>
+        <div><span style="font-family:Arial; font-size: 9pt; color:GrayText;">EXPENSE PROJECTS</span></div>
+        <div class="table-div">
+            <table class="homeTables">
+                <tr>
+                    <th width="10px"></th>
+                    <th width="30px" class="health">Health</th>
+                    <th width="220px">Expense Programs</th>
+                    
+                    <th width="70px">Projected Start Date</th>
+                    <th width="70px">Projected End Date</th>
+                    <th width="80px">Activity Status</th>
+                    <th width="100px">Project Manager</th>
+                    <th width="110px">Project Sponsor</th>
+                </tr>
+            </table>
+        </div>
+        <div class="table-div vertScrollOnly" style="height:300px">
+            <table class="homeTables">
+                @{
+                    try
+                    {
+                        var db = WebMatrix.Data.Database.Open("probedb");
+                        string htr = ViewBag.username;
+                        var qryStrg = "SELECT p.ProjectId, p.DisplayName,p.ApprovalStatus,p.ActivityStatus,p.ProjectType,p.ProjectNumber,p.Health,p.ServiceAgreementType,p.ServiceAgreementExpDt,convert(varchar, ProjectedStart, 101) as StartDate,convert(varchar, ProjectedEnd, 101) as EndDate,(select max(u.DisplayName)";
+                        qryStrg = qryStrg + " from Users u join ProjectUserRoles a on p.ProjectId = a.ProjectId and u.UserId = a.UserId and a.ProjectRole = 'Manager') as Manager, (select max(u.DisplayName)from Users u";
+                        qryStrg= qryStrg+" join ProjectUserRoles a on p.ProjectId = a.ProjectId and u.UserId = a.UserId and a.ProjectRole = 'Sponsor') as Sponsor";
+                        qryStrg = qryStrg + ", sav.ServiceAgreementVendorName, isnull((select case when isnull(pc.ConfigValue, 'Yes') = 'Yes' or     dbo.isProbeAdmin_f('"+htr+"') = 'Y'";
+                        qryStrg = qryStrg + "then 'Y' end as Display_Project_Info from ProjectConfig pc where p.ProjectId = pc.ProjectId and    pc.ConfigType = 'Display Project Info'";
+                        qryStrg = qryStrg + "), 'Y') as Display_Project_Info FROM Projects p left join ServiceAgreementVendors     sav on p.ServiceAgreementVendorId = sav.ServiceAgreementVendorId";
+                        qryStrg = qryStrg + " WHERE p.ProjectType = 'Expense' and p.ApprovalStatus = 'Approved' and p.ActivityStatus not in ('Completed', 'Cancelled') and year(p.ProjectedStart) < year(getdate()) + 1";
+                        qryStrg = qryStrg + " order by p.ProjectedEnd asc, p.ActivityStatus ASC";
+
+                        var projlist = db.Query(qryStrg);
+
+
+
+                        var db1 = WebMatrix.Data.Database.Open("probedb");
+                        string htr1 = ViewBag.username;
+
+
+
+
+                        /*string e2 = "SELECT p.ProjectId, p.ProjectNumber,p.ProjectName,";
+                        e2 = e2 + " p.DisplayName,p.BudgetNum,p.Priority,p.Health,p.Scope,p.Comments,";
+                        e2 = e2 + " p.Customer,p.CarryOver,p.Displayname,p.ProjectType,p.RiskLikelihood,p.RiskImpact ,";
+                        e2 = e2 + " p.ApprovalStatus,p.ActivityStatus,p.ProposedStart,p.ProposedEnd,p.ProjectedStart,";
+                        e2 = e2 + " p.ProjectedEnd,p.ActualStart,p.ActualEnd,p.pct_complete,p.InitApproved,";
+                        e2 = e2 + " sav.ServiceAgreementVendorId,sav.ServiceAgreementVendorName,";
+                        e2 = e2 + " p.ServiceAgreementType,p.ServiceAgreementExpDt, ";
+                        e2 = e2 + " isnull((select case when isnull(pc.ConfigValue, 'Yes') = 'Yes' or";
+                        e2 = e2 + " dbo.isProbeAdmin_f('" + htr + "') = 'Y' then 'Y' else 'N' end as";
+                        e2 = e2 + " Display_Project_Info from ProjectConfig pc where p.ProjectId = pc.ProjectId";
+                        e2 = e2 + " and    pc.ConfigType = 'Display Project Info'), 'Y') as Display_Project_Info";
+                        e2 = e2 + ", (select u.DisplayName from ProjectUserRoles pur join Users u on pur.UserId = u.UserId";
+                        e2 = e2 + " where p.ProjectId = pur.ProjectId and pur.ProjectRole = 'Manager')      as Manager";
+                        e2 = e2 + ", (select u.DisplayName from ProjectUserRoles pur join Users u on pur.UserId = u.UserId";
+                        e2 = e2 + " where p.ProjectId = pur.ProjectId and pur.ProjectRole = 'Sponsor')      as Sponsor";
+                        e2 = e2 + " FROM Projects   p left join ServiceAgreementVendors     sav on";
+                        e2 = e2 + " p.ServiceAgreementVendorId = sav.ServiceAgreementVendorId where";
+                        e2 = e2 + " p.ServiceAgreementType IS NOT NULL and p.ProjectType = 'Expense' order by p.ProjectedEnd asc";*/
+
+
+                        string e2 = "SELECT p.ProjectId ";
+                        e2 = e2 + " , p.ProjectNumber ";
+                        e2 = e2 + " ,p.ProjectName ";
+                        e2 = e2 + " ,p.DisplayName ";
+                        e2 = e2 + " ,p.BudgetNum ";
+                        e2 = e2 + " ,p.Priority ";
+                        e2 = e2 + " ,p.Health ";
+                        e2 = e2 + " ,p.Scope ";
+                        e2 = e2 + " ,p.Comments ";
+                        e2 = e2 + " ,p.Customer ";
+                        e2 = e2 + " ,p.CarryOver ";
+                        e2 = e2 + " ,p.Displayname ";
+                        e2 = e2 + " ,p.ProjectType ";
+                        e2 = e2 + " ,p.RiskLikelihood ";
+                        e2 = e2 + " ,p.RiskImpact ";
+                        e2 = e2 + " ,p.ApprovalStatus ";
+                        e2 = e2 + " ,p.ActivityStatus ";
+                        e2 = e2 + " ,p.ProposedStart ";
+                        e2 = e2 + " ,p.ProposedEnd ";
+                        e2 = e2 + " ,p.ProjectedStart ";
+                        e2 = e2 + " ,p.ProjectedEnd ";
+                        e2 = e2 + " ,p.ActualStart ";
+                        e2 = e2 + " ,p.ActualEnd ";
+                        e2 = e2 + " ,p.pct_complete ";
+                        e2 = e2 + " ,p.InitApproved ";
+                        e2 = e2 + " ,sav.ServiceAgreementVendorId ";
+                        e2 = e2 + " ,sav.ServiceAgreementVendorName ";
+                        e2 = e2 + " ,p.ServiceAgreementType ";
+                        e2 = e2 + " ,p.ServiceAgreementExpDt ";
+                        e2 = e2 + " ,  isnull((select case  when isnull(pc.ConfigValue, 'Yes') = 'Yes' or dbo.isProbeAdmin_f('" + htr + "') = 'Y' ";
+                        e2 = e2 + " then 'Y'  ";
+                        e2 = e2 + " else 'N' ";
+                        e2 = e2 + " end as Display_Project_Info ";
+                        e2 = e2 + " from ProjectConfig pc ";
+                        e2 = e2 + " where p.ProjectId = pc.ProjectId ";
+                        e2 = e2 + " and    pc.ConfigType = 'Display Project Info'), 'Y' )        as Display_Project_Info ";
+                        e2 = e2 + " , dbo.GetProjectUserName_f(p.ProjectId, 'Manager') as Manager ";
+                        e2 = e2 + " , dbo.GetProjectUserName_f(p.ProjectId, 'Sponsor') as Sponsor ";
+                        e2 = e2 + " FROM Projects p ";
+                        e2 = e2 + " left ";
+                        e2 = e2 + " join ServiceAgreementVendors    sav ";
+                        e2 = e2 + " on     p.ServiceAgreementVendorId = sav.ServiceAgreementVendorId ";
+                        e2 = e2 + " where p.ProjectType = 'Contractual Agreement' ";
+                        e2 = e2 + " and p.ApprovalStatus = 'Approved' ";
+                        e2 = e2 + " and datepart(yy, getdate()) ";
+                        e2 = e2 + " between datepart(yyyy, dbo.MinSmallDatetime_f(p.ProjectedStart, p.ActualStart)) ";
+                        e2 = e2 + " and datepart(yyyy, isnull(dbo.MaxSmallDatetime_f(p.ProjectedEnd, p.ActualEnd), '1/1/2050'))  ";
+                        e2 = e2 + " order by p.ProjectedEnd asc";
+
+
+
+
+
+
+                        var projlist1 = db1.Query(e2);
+                        
+
+
+                        foreach (var proj1 in projlist1)
+                        {
+
+                             <script>
+                                 var AgreeType;
+                                 AgreeType='@proj1.ServiceAgreementType';
+                                 if(AgreeType!=""){
+                                     var kol={}
+                                     kol.ProjectId=@proj1.ProjectId;
+                                     kol.ServiceAgreementType='@proj1.ServiceAgreementType';
+                                     kol.ServiceAgreementExpDt='@proj1.ServiceAgreementExpDt';
+                                     kol.StartDate='@proj1.ProjectedStart';
+                                     kol.DisplayName='@proj1.DisplayName';
+                                     kol.ActivityStatus='@proj1.ActivityStatus';
+                                     kol.EndDate='@proj1.ProjectedEnd';
+                                     kol.ServiceAgreementVendorName='@proj1.ServiceAgreementVendorName';
+                                     kol.ProjectNumber='@proj1.ProjectNumber';
+                                     kol.ProjectName='@proj1.ProjectName';
+                                     kol.Manager='@proj1.Manager';
+                                     kol.Sponsor='@proj1.Sponsor';
+                                     contractObj.push(kol);
+
+                                 }
+
+                             </script>
+                                    }
+
+
+
+                                    
+
+
+
+                                    foreach (var proj in projlist)
+                                    {
+
+
+                                        if (proj.Display_Project_Info == "Y")
+                                        {
+                            <tr>
+                                <td style="border:none; width:10px;"><input type="checkbox" name="projects" value=@proj.ProjectId /></td>
+                                                        @{
+                                                var projHealth1 = 0;
+
+
+                                                if (Convert.ToDateTime(proj.EndDate) < DateTime.Today) //set health to 2 (red)
+                                                {
+                                                    projHealth1 = 2;
+                                                }
+
+                                                if (Convert.ToDateTime(proj.StartDate) < DateTime.Today && proj.ActivityStatus == "Not Started")
+                                                {
+                                                    projHealth1 = 1; //set health to 1 (yellow)
+                                                }
+                                                if (projHealth1 == 0)
+                                                {
+                                        <td class="healthGreen" style="width:30px;"> </td>
+                                                }
+                                                else if (projHealth1 == 1)
+                                                {
+                                        <td class="healthYellow" style="width:30px;"> </td>
+                                                }
+                                                else if (projHealth1 == 2)
+                                                {
+                                        <td class="healthRed" style="width:30px;"> </td>
+                                                }
+                                                else
+                                                {
+                                        <td> </td>
+                                                }
+                                    @*if (Convert.ToDateTime(proj.EndDate) < DateTime.Today)
+                                        {
+                                            <td class="healthRed"> </td>
+                                        }
+                                        else if (Convert.ToDateTime(proj.StartDate) < DateTime.Today && proj.ActivityStatus == "Not Started")
+                                        {
+                                            <td class="healthYellow"> </td>
+                                        }
+                                        else if (proj.Health == 0)
+                                        {
+                                            <td class="healthGreen"> </td>
+                                        }
+                                        else
+                                        {
+                                            <td> </td>
+                                        }*@
+                                }
+                                <td style="text-align:left;width:250px;"><a href="~/Home/SelectedProject/?id=@proj.ProjectId&fromList=Home" onclick="javascript: ResetIndex()" id="@proj.ProjectId" class="anchor">@proj.DisplayName</a></td>
+                                
+                                <td style="width:70px;">@proj.StartDate</td>
+                                <td style="width:70px;">@proj.EndDate</td>
+
+                    
+                                <td style="width:80px;">@proj.ActivityStatus</td>
+                            
+
+                                <td style="width:100px;">@proj.Manager</td>
+                                <td style="width:100px;">@proj.Sponsor</td>
+                            </tr>
+
+
+
+
+
+                                                            }
+                                                        }
+                                                    }
+                                                    catch (Exception ex)
+                                                    {
+                                        <h3>@ex.Message</h3>
+                                        }
+                                                }
+            </table>
+
+        </div>
+
+
+        <div style="margin-top:15px"><span style="font-family:Arial; font-size: 9pt; color:GrayText;">CONTRACTUAL AGREEMENTS</span></div>
+        <div >
+            <div style="border:solid 1px lightgray;padding:5px;width:1150px;">
+                
+                <table class="homeTables" style="background-color:aqua;">
+                    <tr style="padding:3px;">
+                        <th style="width:20px"></th>
+                        <th style="width:35px;text-align:center;" class="health">Health</th>
+                        <th style="width:260px;text-align:center;" class="health">Expense Programs</th>
+
+                        <th style="width:90px;padding:2px;">Projected Start Date</th>
+                        <th style="width:80px;">Projected End Date</th>
+                        <th style="width:86px;">Activity Status</th>
+                        <th style="width:110px;">Project Manager</th>
+                        <th style="width:130px;">Project Sponsor</th>
+                        <th width="78px">Vendor Name</th>
+                        <th width="78px">Contract Expirations</th>
+                        <th style="width:165px;text-align:center">Agreement Type</th>
+                    </tr>
+                </table>
+            </div>
+            <div style="height:300px;overflow:auto;overflow-x:hidden;border:solid 1px lightgray;padding:5px;width:1150px;margin-top:5px">
+                <table  style="font-size: 10pt;text-align:center;" id="contractTable"></table>
+
+            </div>
+
+
+        </div>
+        
+        <div class="divCharts">
+        </div>
+    </div>
+    <div class="float-left">
+        <div id="cost-chart">
+
+        </div>
+        <div id="customer-chart">
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+    var tod= new Date();
+
+
+
+
+
+
+    var cLeng=contractObj.length;
+
+
+    var trow = "#fff";
+    for(i=0;i<cLeng;i++){
+        var nDate,n
+        var color = "red"
+        
+        if(contractObj[i].ProposedEndt!=""){
+            nDate= new Date(contractObj[i].EndDate)
+            compDate= new Date(contractObj[i].EndDate)
+            var dateval=(nDate.getFullYear())-1;
+            compDate.setFullYear(dateval);
+            var newdate = new Date();
+            var aDate=compDate.valueOf();
+            var bDate=newdate.valueOf();
+
+            var sAgredate="";
+            var sAgredate1="";
+            if(contractObj[i].ServiceAgreementExpDt!=""){
+               sAgredate= new Date(contractObj[i].ServiceAgreementExpDt)
+               sAgredate1=sAgredate.toLocaleDateString();
+            }else{
+                sAgredate1="No end date given"
+            }
+            
+
+            
+
+            if(aDate>bDate){
+                color="green"
+            }
+
+            if(aDate < bDate && contractObj[i].ActivityStatus == "Not Started"){
+                color="yellow"
+            }
+
+
+            n = nDate.toLocaleDateString();
+            
+           
+        }else {
+            n="no expiration given";
+            color="yellow"
+        }
+
+
+        var f,f1,f2,f3
+        if(contractObj[i].EndDate!=""){
+            f= new Date(contractObj[i].EndDate);
+            f1=f.toLocaleDateString();
+        }else{
+            f1="No end date given"
+        }
+ 
+
+    
+        if(contractObj[i].StartDate!="" && contractObj[i].StartDate!==undefined){
+
+            f2= new Date(contractObj[i].StartDate);
+            f3=f2.toLocaleDateString();
+        }else{
+            f3="No start date given"
+       
+        }
+
+        var stle="width:77px;"
+        if (contractObj[i].ActivityStatus == "Not Started")
+        {
+
+            //stle="width:77px;color:red;font-weight:bold;"
+        }
+
+        $("#contractTable").append("<tr style='background-color:" + trow + "'><td width='20px;padding:3px;'><input type='checkbox' /></td><td  style='background-color:" + color + ";height:30px;width:33px;border-left:solid 1px #000;border-bottom:solid 1px #000;'>.</td><td style='width:278px;text-align:left;border-left:solid 1px #000;border-bottom:solid 1px #000;padding: 0.25em 0.25em 0.25em 0.25em;'><a href='/Probe/Home/SelectedProject/?id=" + contractObj[i].ProjectId + "&fromList=Home' style='color:blue;'>" + contractObj[i].DisplayName + "</a></td><td style='width:82px;border-left:solid 1px #000;border-bottom:solid 1px #000;'>" + f3 + "</td><td style='width:84px;border-left:solid 1px #000;border-bottom:solid 1px #000;' >" + f1 + "</td><td style='" + stle + ";border-left:solid 1px #000;border-bottom:solid 1px #000;width:90px;'>" + contractObj[i].ActivityStatus + "</td><td style='width:110px;border-left:solid 1px #000;border-bottom:solid 1px #000;'>" + contractObj[i].Manager + "</td><td style='width:114px;border-left:solid 1px #000;border-bottom:solid 1px #000;' >" + contractObj[i].Sponsor + "</td><td style='width:91px;border-left:solid 1px #000;border-bottom:solid 1px #000;'>" + contractObj[i].ServiceAgreementVendorName + "</td><td style='width:88px;border-left:solid 1px #000;border-bottom:solid 1px #000;' >" + sAgredate1 + "</td><td style='width:140px;border-left:solid 1px #000;border-bottom:solid 1px #000' >" + contractObj[i].ServiceAgreementType + "</td></tr>");
+        if (trow=="#fff"){
+            trow = "#deedf7"
+        } else {
+            trow = "#fff"
+        }
+    }
+
+</script>
+
